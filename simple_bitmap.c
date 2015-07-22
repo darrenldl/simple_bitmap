@@ -759,92 +759,92 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
 }
 
 // both maps must be initialised
-int bitmap_copy (simple_bitmap* old_map, simple_bitmap* new_map, unsigned char allow_truncate, map_block default_value) {
-   map_block* old_cur;
-   map_block* new_cur;
+int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char allow_truncate, map_block default_value) {
+   map_block* src_cur;
+   map_block* dst_cur;
    
    map_block mask;
    
    unsigned char count;
    
    // input check
-   if (old_map == NULL) {
-      printf("bitmap_copy : old_map is NULL\n");
+   if (src_map == NULL) {
+      printf("bitmap_copy : src_map is NULL\n");
       return WRONG_INPUT;
    }
-   if (old_map->base == NULL) {
-      printf("bitmap_copy : old_map->base is NULL\n");
+   if (src_map->base == NULL) {
+      printf("bitmap_copy : src_map->base is NULL\n");
       return CORRUPTED_DATA;
    }
-   if (old_map->end == NULL) {
-      printf("bitmap_copy : old_map->end is NULL\n");
+   if (src_map->end == NULL) {
+      printf("bitmap_copy : src_map->end is NULL\n");
       return CORRUPTED_DATA;
    }
-   if (old_map->length == 0) {
-      printf("bitmap_copy : old_map has no length\n");
+   if (src_map->length == 0) {
+      printf("bitmap_copy : src_map has no length\n");
       return CORRUPTED_DATA;
    }
-   if (old_map->base + get_bitmap_map_block_index(old_map->length-1) != old_map->end) {
-      printf("bitmap_copy : old_map : length is inconsistent with base and end\n");
+   if (src_map->base + get_bitmap_map_block_index(src_map->length-1) != src_map->end) {
+      printf("bitmap_copy : src_map : length is inconsistent with base and end\n");
       return CORRUPTED_DATA;
    }
-   if (old_map->number_of_zeros + old_map->number_of_ones != old_map->length) {
-      printf("bitmap_copy : old_map : inconsistent statistics of number of ones and zeros\n");
+   if (src_map->number_of_zeros + src_map->number_of_ones != src_map->length) {
+      printf("bitmap_copy : src_map : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
-   if (new_map == NULL) {
-      printf("bitmap_copy : new_map is NULL\n");
+   if (dst_map == NULL) {
+      printf("bitmap_copy : dst_map is NULL\n");
       return WRONG_INPUT;
    }
-   if (new_map->base == NULL) {
-      printf("bitmap_copy : new_map->base is NULL\n");
+   if (dst_map->base == NULL) {
+      printf("bitmap_copy : dst_map->base is NULL\n");
       return CORRUPTED_DATA;
    }
-   if (new_map->end == NULL) {
-      printf("bitmap_copy : new_map->end is NULL\n");
+   if (dst_map->end == NULL) {
+      printf("bitmap_copy : dst_map->end is NULL\n");
       return CORRUPTED_DATA;
    }
-   if (new_map->length == 0) {
-      printf("bitmap_copy : new_map has no length\n");
+   if (dst_map->length == 0) {
+      printf("bitmap_copy : dst_map has no length\n");
       return CORRUPTED_DATA;
    }
-   if (new_map->base + get_bitmap_map_block_index(new_map->length-1) != new_map->end) {
-      printf("bitmap_copy : new_map : length is inconsistent with base and end\n");
+   if (dst_map->base + get_bitmap_map_block_index(dst_map->length-1) != dst_map->end) {
+      printf("bitmap_copy : dst_map : length is inconsistent with base and end\n");
       return CORRUPTED_DATA;
    }
-   if (new_map->number_of_zeros + new_map->number_of_ones != new_map->length) {
-      printf("bitmap_copy : new_map : inconsistent statistics of number of ones and zeros\n");
+   if (dst_map->number_of_zeros + dst_map->number_of_ones != dst_map->length) {
+      printf("bitmap_copy : dst_map : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
    
-   if (old_map->length <= new_map->length) { // no need for truncation at all
+   if (src_map->length <= dst_map->length) { // no need for truncation at all
    
       // clean up a bit
       if (default_value & 0x1) {
-         bitmap_one(new_map);
+         bitmap_one(dst_map);
       }
       else {
-         bitmap_zero(new_map);
+         bitmap_zero(dst_map);
       }
       
-      for (old_cur = old_map->base, new_cur = new_map->base;
-            old_cur <= old_map->end;
-            old_cur ++, new_cur++)
+      for (src_cur = src_map->base, dst_cur = dst_map->base;
+            src_cur <= src_map->end;
+            src_cur ++, dst_cur++)
       {
-         *new_cur = *old_cur;
+         *dst_cur = *src_cur;
       }
       
       // clean off the edge
-      new_cur = new_map->base + (old_map->end - old_map->base);
+      dst_cur = dst_map->base + (src_map->end - src_map->base);
       mask = 0;
-      for (count = 0; count <= get_bitmap_map_block_bit_index(old_map->length-1); count++) {
+      for (count = 0; count <= get_bitmap_map_block_bit_index(src_map->length-1); count++) {
          mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
       }
       if (default_value & 0x1) {
-         *new_cur |= ~mask;
+         *dst_cur |= ~mask;
       }
       else {
-         *new_cur &= mask;
+         *dst_cur &= mask;
       }
    }
    else {   // need to truncate
@@ -855,34 +855,34 @@ int bitmap_copy (simple_bitmap* old_map, simple_bitmap* new_map, unsigned char a
    
       // clean up a bit
       if (default_value & 0x1) {
-         bitmap_one(new_map);
+         bitmap_one(dst_map);
       }
       else {
-         bitmap_zero(new_map);
+         bitmap_zero(dst_map);
       }
       
-      for (old_cur = old_map->base, new_cur = new_map->base;
-            new_cur <= new_map->end;
-            old_cur ++, new_cur++)
+      for (src_cur = src_map->base, dst_cur = dst_map->base;
+            dst_cur <= dst_map->end;
+            src_cur ++, dst_cur++)
       {
-         *new_cur = *old_cur;
+         *dst_cur = *src_cur;
       }
       
       // clean off the edge
-      new_cur = new_map->end;
+      dst_cur = dst_map->end;
       mask = 0;
-      for (count = 0; count <= get_bitmap_map_block_bit_index(new_map->length-1); count++) {
+      for (count = 0; count <= get_bitmap_map_block_bit_index(dst_map->length-1); count++) {
          mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
       }
       if (default_value & 0x1) {
-         *new_cur |= ~mask;
+         *dst_cur |= ~mask;
       }
       else {
-         *new_cur &= mask;
+         *dst_cur &= mask;
       }
    }
    
-   bitmap_count_zeros_and_ones(new_map);
+   bitmap_count_zeros_and_ones(dst_map);
    
    return 0;
 }

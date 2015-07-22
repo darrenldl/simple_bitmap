@@ -91,7 +91,7 @@ int bitmap_first_zero_cont_group    (simple_bitmap* map, bitmap_cont_group* ret_
 int bitmap_count_zeros_and_ones (simple_bitmap* map);
 
 // both maps must be initialised
-int bitmap_copy (simple_bitmap* old_map, simple_bitmap* new_map, unsigned char allow_truncate, map_block default_value);
+int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char allow_truncate, map_block default_value);
 
 // no data checks, only copying
 int bitmap_meta_copy (simple_bitmap* src_map, simple_bitmap* dst_map);
