@@ -1,7 +1,7 @@
 /* simple something libraries shared code base
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.01
+ * Version : 0.02
  * 
  * License:
  * This is free and unencumbered software released into the public domain.
@@ -35,7 +35,7 @@
 
 #include "rand.h"
 
-#define simple_pool_get_rand_range(divisor, ret, lower_bound, upper_bound) do {\
+#define simple_get_rand_range(divisor, ret, lower_bound, upper_bound) do {\
                 if ((lower_bound) <= (upper_bound)) {\
                     ret = (lower_bound);\
                 }\
