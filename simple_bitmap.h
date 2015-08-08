@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.03
+ * Version : 0.04
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -87,6 +87,18 @@ int bitmap_first_zero_bit_index  (simple_bitmap* map, uint_fast32_t* result, bit
 
 int bitmap_first_one_cont_group     (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
 int bitmap_first_zero_cont_group    (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
+
+// backward version of the searching functions
+/* Note:
+ *    for index searching functions, the indexing follow as above ones(from left to right)
+ *    for continuous group searching functions,
+ *    the indexing and direction follow as above ones(from left to right)
+ */
+int bitmap_first_one_bit_index_back   (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
+int bitmap_first_zero_bit_index_back  (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
+
+int bitmap_first_one_cont_group_back     (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
+int bitmap_first_zero_cont_group_back    (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
 
 int bitmap_count_zeros_and_ones (simple_bitmap* map);
 

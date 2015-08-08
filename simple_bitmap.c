@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.03
+ * Version : 0.04
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -754,6 +754,434 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
       
       one_count = 0;
    }
+   
+   return 0;
+}
+
+int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_index skip_to_bit) {
+   map_block buf;
+   
+   map_block mask;
+   
+   map_block* cur;
+   
+   uint_fast8_t count = 0;
+   
+   // input check
+   if (map == NULL) {
+      printf("bitmap_first_one_bit_index_back : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->base == NULL) {
+      printf("bitmap_first_one_bit_index_back : base is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->end == NULL) {
+      printf("bitmap_first_one_bit_index_back : end is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->length == 0) {
+      printf("bitmap_first_one_bit_index_back : map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->base + get_bitmap_map_block_index(map->length-1) != map->end) {
+      printf("bitmap_first_one_bit_index_back : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->number_of_zeros + map->number_of_ones != map->length) {
+      printf("bitmap_first_one_bit_index_back : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (result == NULL) {
+      printf("bitmap_first_one_bit_index_back : result is null\n");
+      return WRONG_INPUT;
+   }
+   if (skip_to_bit >= map->length) {
+      printf("bitmap_first_one_bit_index_back : skip_to_bit is out of range\n");
+      return WRONG_INPUT;
+   }
+   
+   // skip
+   cur = map->base + get_bitmap_map_block_index(skip_to_bit);
+   
+   buf = *cur;
+   
+   // mask skipped bits
+   mask = 0;
+   for (count = 0; count <= get_bitmap_map_block_bit_index(skip_to_bit); count++) {
+      mask |= (0x1 << (MAP_BLOCK_BIT - 1)) >> count;
+   }
+   buf = buf & mask;
+   
+   // setup mask so right most bit is 1
+   mask = 0x1;
+   
+   // find first non zero map_block
+   for (; cur >= map->base; cur--) {
+      if (count == MAP_BLOCK_BIT) {
+         buf = *cur;
+      }
+      if (buf != 0) {
+         break;
+      }
+      count = MAP_BLOCK_BIT;
+   }
+   
+   // find first one bit
+   for (count = 0; count < MAP_BLOCK_BIT; count++) {
+      if (buf & mask) {
+         break;
+      }
+      buf = buf >> 1;
+   }
+   
+   if (count == MAP_BLOCK_BIT) { // failed to find the one bit
+      *result = map->length;
+      return SEARCH_FAIL;
+   }
+   else {
+      *result = (cur - map->base) * MAP_BLOCK_BIT + (MAP_BLOCK_BIT-1 - count);
+      return 0;
+   }
+   
+   return 0;
+}
+
+int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit_index skip_to_bit) {
+   map_block buf;
+   
+   map_block mask;
+   
+   map_block* cur;
+   
+   uint_fast8_t count = 0;
+   
+   // input check
+   if (map == NULL) {
+      printf("bitmap_first_zero_bit_index_back : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->base == NULL) {
+      printf("bitmap_first_zero_bit_index_back : base is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->end == NULL) {
+      printf("bitmap_first_zero_bit_index_back : end is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->length == 0) {
+      printf("bitmap_first_zero_bit_index_back : map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->base + get_bitmap_map_block_index(map->length-1) != map->end) {
+      printf("bitmap_first_zero_bit_index_back : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->number_of_zeros + map->number_of_ones != map->length) {
+      printf("bitmap_first_zero_bit_index_back : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (skip_to_bit >= map->length) {
+      printf("bitmap_first_zero_bit_index_back : skip_to_bit is out of range\n");
+      return WRONG_INPUT;
+   }
+   
+   // skip
+   cur = map->base + get_bitmap_map_block_index(skip_to_bit);
+   
+   buf = *cur;
+   
+   // mask skipped bits
+   mask = 0;
+   for (count = 0; count < MAP_BLOCK_BIT-1 - get_bitmap_map_block_bit_index(skip_to_bit); count++) {
+      mask |= 0x1 << count;
+   }
+   buf = buf | mask;
+   
+   printf("mask : %X\n", mask);
+   
+   // setup mask so right most bit is 1
+   mask = 0x1;
+   
+   // find first non all one map_block
+   for (; cur >= map->base; cur--) {
+      if (count == MAP_BLOCK_BIT) {
+         buf = *cur;
+      }
+      if (buf != (map_block) -1) {
+         break;
+      }
+      count = MAP_BLOCK_BIT;
+   }
+   
+   printf("*cur : %X\n", *cur);
+   
+   // find first zero bit
+   for (count = 0; count < MAP_BLOCK_BIT; count++) {
+      if ((~buf) & mask) {
+         break;
+      }
+      buf = buf >> 1;
+   }
+   
+   if (count == MAP_BLOCK_BIT) {
+      *result = map->length;
+      return SEARCH_FAIL;
+   }
+   else {
+      *result = (cur - map->base) * MAP_BLOCK_BIT + (MAP_BLOCK_BIT-1 - count);
+      return 0;
+   }
+   
+   return 0;
+}
+
+int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit) {
+   map_block buf;
+  
+   map_block mask;
+   
+   map_block* cur;
+   
+   uint_fast8_t count = 0;
+  
+   bit_index zero_count;
+   bit_index one_count;
+   
+   bit_index end;
+   
+   // input check
+   if (map == NULL) {
+      printf("bitmap_first_one_cont_group_back : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->base == NULL) {
+      printf("bitmap_first_one_cont_group_back : base is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->end == NULL) {
+      printf("bitmap_first_one_cont_group_back : end is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->length == 0) {
+      printf("bitmap_first_one_cont_group_back : map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->base + get_bitmap_map_block_index(map->length-1) != map->end) {
+      printf("bitmap_first_one_cont_group_back : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->number_of_zeros + map->number_of_ones != map->length) {
+      printf("bitmap_first_one_cont_group_back : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_grp == NULL) {
+      printf("bitmap_first_one_cont_group_back : ret_grp is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (skip_to_bit >= map->length) {
+      printf("bitmap_first_one_cont_group_back : skip_to_bit is out of range\n");
+      return WRONG_INPUT;
+   }
+   
+   // setup return group
+   ret_grp->bit_type = 0x1;
+   ret_grp->start = 0;
+   ret_grp->length = 0;
+   
+   // skip
+   cur = map->base + get_bitmap_map_block_index(skip_to_bit);
+   
+   buf = *cur;
+   
+   // mask skipped bits
+   mask = 0;
+   for (count = 0; count <= get_bitmap_map_block_bit_index(skip_to_bit); count++) {
+      mask |= (0x1 << (MAP_BLOCK_BIT - 1)) >> count;
+   }
+   buf = buf & mask;
+   
+   // setup mask so right most bit is 1
+   mask = 0x1;
+   
+   // find first non zero map block
+   for (; cur >= map->end; cur--) {
+      if (count == MAP_BLOCK_BIT) {
+         buf = *cur;
+      }
+      if (buf != 0) {
+         break;
+      }
+      count = MAP_BLOCK_BIT;
+   }
+   
+   // find first one bit
+   for (zero_count = 0; zero_count < MAP_BLOCK_BIT; zero_count++) {
+      if (buf & mask) {
+         break;
+      }
+      buf = buf >> 1;
+   }
+   
+   if (zero_count == MAP_BLOCK_BIT) {
+      return SEARCH_FAIL;
+   }
+   else {
+      end = (cur - map->base) * MAP_BLOCK_BIT + (MAP_BLOCK_BIT-1 - zero_count);
+   }
+   
+   // cur initialised already
+   for (; cur >= map->base; cur--) {
+      if (zero_count == 0) {
+         buf = *cur;
+      }
+      
+      // count ones
+      for (one_count = 0; one_count < MAP_BLOCK_BIT - zero_count; one_count++) {
+         if ((~buf) & mask) {
+            break;
+         }
+         buf = buf >> 1;
+      }
+      
+      // update count
+      ret_grp->length += one_count;
+      
+      if ((one_count + zero_count) != MAP_BLOCK_BIT) {
+         // the one bits end in this map_block, no need to continue
+         break;
+      }
+      
+      zero_count = 0;
+   }
+   
+   // set start
+   ret_grp->start = end - ret_grp->length + 1;
+   
+   return 0;
+}
+
+int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit) {
+   map_block buf;
+  
+   map_block mask;
+  
+   map_block* cur;
+  
+   uint_fast8_t count = 0;
+  
+   bit_index zero_count;
+   bit_index one_count;
+   
+   bit_index end;
+   
+   // input check
+   if (map == NULL) {
+      printf("bitmap_first_zero_cont_group_back : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->base == NULL) {
+      printf("bitmap_first_zero_cont_group_back : base is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->end == NULL) {
+      printf("bitmap_first_zero_cont_group_back : end is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->length == 0) {
+      printf("bitmap_first_zero_cont_group_back : map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->base + get_bitmap_map_block_index(map->length-1) != map->end) {
+      printf("bitmap_first_zero_cont_group_back : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->number_of_zeros + map->number_of_ones != map->length) {
+      printf("bitmap_first_zero_cont_group_back : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_grp == NULL) {
+      printf("bitmap_first_zero_cont_group_back : ret_grp is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (skip_to_bit >= map->length) {
+      printf("bitmap_first_zero_cont_group_back : skip_to_bit is out of range\n");
+      return WRONG_INPUT;
+   }
+   
+   // setup return group
+   ret_grp->bit_type = 0x0;
+   ret_grp->start = 0;
+   ret_grp->length = 0;
+   
+   // skip
+   cur = map->base + get_bitmap_map_block_index(skip_to_bit);
+   
+   buf = *cur;
+   
+   // mask skipped bits
+   mask = 0;
+   for (count = 0; count < MAP_BLOCK_BIT-1 - get_bitmap_map_block_bit_index(skip_to_bit); count++) {
+      mask |= 0x1 << count;
+   }
+   buf = buf | mask;
+   
+   // setup mask so right most bit is 1
+   mask = 0x1;
+   
+   // find first non all one map block
+   for (; cur >= map->base; cur--) {
+      if (count == MAP_BLOCK_BIT) {
+         buf = *cur;
+      }
+      if (buf != (map_block) -1) {
+         break;
+      }
+      count = MAP_BLOCK_BIT;
+   }
+   
+   // find first zero bit
+   for (one_count = 0; one_count < MAP_BLOCK_BIT; one_count++) {
+      if ((~buf) & mask) {
+         break;
+      }
+      buf = buf >> 1;
+   }
+   
+   if (one_count == MAP_BLOCK_BIT) {
+      return SEARCH_FAIL;
+   }
+   else {
+      end = (cur - map->base) * MAP_BLOCK_BIT + (MAP_BLOCK_BIT-1 - one_count);
+   }
+   
+   // cur initialised already
+   for (; cur >= map->base; cur--) {
+      if (one_count == 0) {
+         buf = *cur;
+      }
+      
+      // count zeros
+      for (zero_count = 0; zero_count < MAP_BLOCK_BIT - one_count; zero_count++) {
+         if (buf & mask) {
+            break;
+         }
+         buf = buf >> 1;
+      }
+      
+      // update count
+      ret_grp->length += zero_count;
+      
+      if ((zero_count + one_count) != MAP_BLOCK_BIT) {
+         // the zero bits end in this map_block, no need to continue
+         break;
+      }
+      
+      one_count = 0;
+   }
+   
+   // set start
+   ret_grp->start = end - ret_grp->length + 1;
    
    return 0;
 }
