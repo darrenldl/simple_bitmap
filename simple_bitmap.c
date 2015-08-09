@@ -898,8 +898,6 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
    }
    buf = buf | mask;
    
-   printf("mask : %X\n", mask);
-   
    // setup mask so right most bit is 1
    mask = 0x1;
    
@@ -913,8 +911,6 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
       }
       count = MAP_BLOCK_BIT;
    }
-   
-   printf("*cur : %X\n", *cur);
    
    // find first zero bit
    for (count = 0; count < MAP_BLOCK_BIT; count++) {
