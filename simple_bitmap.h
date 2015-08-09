@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.05
+ * Version : 0.06
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -52,6 +52,8 @@
 
 #include <stdint.h>
 
+#include <stddef.h>
+
 #include <limits.h>
 
 #include "simple_something_error.h"
@@ -77,10 +79,14 @@ struct simple_bitmap {
 };
 
 struct bitmap_cont_group {
-  map_block bit_type;
-  bit_index start;
-  bit_index length;
+   map_block bit_type;
+   bit_index start;
+   bit_index length;
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif   
 
 /* default value :
  *    0 - overwrite space with 0s
@@ -134,5 +140,9 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
 int bitmap_show (simple_bitmap* map);
 int bitmap_cont_group_show (bitmap_cont_group* grp);
 int bitmap_raw_show (simple_bitmap* map);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

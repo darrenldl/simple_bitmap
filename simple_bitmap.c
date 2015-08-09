@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.05
+ * Version : 0.06
  * 
  * Note:
  *    simple bitmap is NOT thread safe
