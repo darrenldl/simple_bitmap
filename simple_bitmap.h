@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.04
+ * Version : 0.05
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -36,8 +36,21 @@
 #ifndef SIMPLE_BITMAP_H
 #define SIMPLE_BITMAP_H
 
-#include <stdio.h>
-#include <stdlib.h>
+
+// uncomment the following line to force simple bitmap to shut up,
+// and use minimal number of libraries
+
+//#define SIMPLE_BITMAP_SILENT
+
+#ifdef SIMPLE_BITMAP_SILENT
+   #define printf(...)
+#endif
+
+#ifndef SIMPLE_BITMAP_SILENT
+   #include <stdio.h>
+#endif
+
+#include <stdint.h>
 
 #include <limits.h>
 
