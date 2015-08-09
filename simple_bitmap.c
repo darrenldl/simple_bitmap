@@ -1005,7 +1005,7 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
    mask = 0x1;
    
    // find first non zero map block
-   for (; cur >= map->end; cur--) {
+   for (; cur >= map->base; cur--) {
       if (count == MAP_BLOCK_BIT) {
          buf = *cur;
       }
