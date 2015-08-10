@@ -42,10 +42,6 @@
 
 //#define SIMPLE_BITMAP_SILENT
 
-#ifdef SIMPLE_BITMAP_SILENT
-   #define printf(...)
-#endif
-
 #ifndef SIMPLE_BITMAP_SILENT
    #include <stdio.h>
 #endif

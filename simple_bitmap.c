@@ -35,6 +35,10 @@
 
 #include "simple_bitmap.h"
 
+#ifdef SIMPLE_BITMAP_SILENT
+   #define printf(...)
+#endif
+
 int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast32_t size_in_bits, map_block default_value) {
    int ret_temp;
    
