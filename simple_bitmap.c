@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.06
+ * Version : 0.07
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -45,15 +45,19 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast3
    map->base = base;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_init : map is NULL\n");
       return WRONG_INPUT;
    }
+   #endif
    if (end == NULL) {
+      #ifndef SIMPLE_BITMAP_SKIP_CHECK
       if (size_in_bits == 0) {
          printf("bitmap_init : end is NULL but size is 0 as well\n");
          return WRONG_INPUT;
       }
+      #endif
       map->end = base + get_bitmap_map_block_index(size_in_bits-1);
       map->length = size_in_bits;
    }
@@ -79,6 +83,7 @@ int bitmap_zero (simple_bitmap* map) {
    map_block* cur;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_zero : map is NULL\n");
       return WRONG_INPUT;
@@ -95,6 +100,7 @@ int bitmap_zero (simple_bitmap* map) {
       printf("bitmap_zero : map has no length\n");
       return CORRUPTED_DATA;
    }
+   #endif
    
    // write 0s
    for (cur = map->base; cur <= map->end; cur++) {
@@ -117,6 +123,7 @@ int bitmap_one (simple_bitmap* map) {
    unsigned char count;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_one : map is NULL\n");
       return WRONG_INPUT;
@@ -133,6 +140,7 @@ int bitmap_one (simple_bitmap* map) {
       printf("bitmap_one : map has no length\n");
       return CORRUPTED_DATA;
    }
+   #endif
    
    // write 1s
    for (cur = map->base; cur <= map->end; cur++) {
@@ -165,6 +173,7 @@ int bitmap_read (simple_bitmap* map, bit_index index, map_block* result) {
    map_block buf;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_read : map is NULL\n");
       return WRONG_INPUT;
@@ -189,11 +198,14 @@ int bitmap_read (simple_bitmap* map, bit_index index, map_block* result) {
       printf("bitmap_read : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
+   #endif
    block_index = get_bitmap_map_block_index(index);
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map->base + block_index > map->end || index >= map->length) {
       printf("bitmap_read : index exceeds range\n");
       return WRONG_INPUT;
    }
+   #endif
    bit_indx = get_bitmap_map_block_bit_index(index);
    
    mask = 0x1 << ((MAP_BLOCK_BIT - 1) - bit_indx);
@@ -220,6 +232,7 @@ int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value) {
    map_block original;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_write : map is NULL\n");
       return WRONG_INPUT;
@@ -245,11 +258,14 @@ int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value) {
       printf("bitmap_write : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
+   #endif
    block_index = get_bitmap_map_block_index(index);
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map->base + block_index > map->end || index >= map->length) {
       printf("bitmap_write : index exceeds range\n");
       return WRONG_INPUT;
    }
+   #endif
    bit_indx = get_bitmap_map_block_bit_index(index);
    
    mask = 0x1 << ((MAP_BLOCK_BIT - 1) - bit_indx);
@@ -284,6 +300,7 @@ int bitmap_count_zeros_and_ones (simple_bitmap* map) {
    unsigned char count;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_count_zeros_and_ones : map is NULL\n");
       return WRONG_INPUT;
@@ -304,6 +321,7 @@ int bitmap_count_zeros_and_ones (simple_bitmap* map) {
       printf("bitmap_count_zeros_and_ones : length is inconsistent with base and end\n");
       return CORRUPTED_DATA;
    }
+   #endif
    
    // setup mask so left most bit is 1
    mask = 0x1 << (MAP_BLOCK_BIT - 1);
@@ -364,6 +382,7 @@ int bitmap_first_one_bit_index (simple_bitmap* map, bit_index* result, bit_index
    uint_fast8_t count = 0;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_one_bit_index : map is NULL\n");
       return WRONG_INPUT;
@@ -396,6 +415,7 @@ int bitmap_first_one_bit_index (simple_bitmap* map, bit_index* result, bit_index
       printf("bitmap_first_one_bit_index : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // skip
    cur = map->base + get_bitmap_map_block_index(skip_to_bit);
@@ -450,6 +470,7 @@ int bitmap_first_zero_bit_index (simple_bitmap* map, bit_index* result, bit_inde
    uint_fast8_t count = 0;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_zero_bit_index : map is NULL\n");
       return WRONG_INPUT;
@@ -478,6 +499,7 @@ int bitmap_first_zero_bit_index (simple_bitmap* map, bit_index* result, bit_inde
       printf("bitmap_first_zero_bit_index : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // skip
    cur = map->base + get_bitmap_map_block_index(skip_to_bit);
@@ -535,6 +557,7 @@ int bitmap_first_one_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp,
    bit_index one_count;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_one_cont_group : map is NULL\n");
       return WRONG_INPUT;
@@ -567,6 +590,7 @@ int bitmap_first_one_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp,
       printf("bitmap_first_one_cont_group : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // setup return group
    ret_grp->bit_type = 0x1;
@@ -655,6 +679,7 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
    bit_index one_count;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_zero_cont_group : map is NULL\n");
       return WRONG_INPUT;
@@ -687,6 +712,7 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
       printf("bitmap_first_zero_cont_group : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // setup return group
    ret_grp->bit_type = 0x0;
@@ -772,6 +798,7 @@ int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_
    uint_fast8_t count = 0;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_one_bit_index_back : map is NULL\n");
       return WRONG_INPUT;
@@ -804,6 +831,7 @@ int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_
       printf("bitmap_first_one_bit_index_back : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // skip
    cur = map->base + get_bitmap_map_block_index(skip_to_bit);
@@ -861,6 +889,7 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
    uint_fast8_t count = 0;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_zero_bit_index_back : map is NULL\n");
       return WRONG_INPUT;
@@ -889,6 +918,7 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
       printf("bitmap_first_zero_bit_index_back : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // skip
    cur = map->base + get_bitmap_map_block_index(skip_to_bit);
@@ -951,6 +981,7 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
    bit_index end;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_one_cont_group_back : map is NULL\n");
       return WRONG_INPUT;
@@ -983,6 +1014,7 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
       printf("bitmap_first_one_cont_group_back : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // setup return group
    ret_grp->bit_type = 0x1;
@@ -1076,6 +1108,7 @@ int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* re
    bit_index end;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_first_zero_cont_group_back : map is NULL\n");
       return WRONG_INPUT;
@@ -1108,6 +1141,7 @@ int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* re
       printf("bitmap_first_zero_cont_group_back : skip_to_bit is out of range\n");
       return WRONG_INPUT;
    }
+   #endif
    
    // setup return group
    ret_grp->bit_type = 0x0;
@@ -1196,6 +1230,7 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
    unsigned char count;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (src_map == NULL) {
       printf("bitmap_copy : src_map is NULL\n");
       return WRONG_INPUT;
@@ -1244,6 +1279,7 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
       printf("bitmap_copy : dst_map : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
+   #endif
    
    if (src_map->length <= dst_map->length) { // no need for truncation at all
    
@@ -1339,6 +1375,7 @@ int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits,
    unsigned char count;
    
    //input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_grow : map is NULL\n");
       return WRONG_INPUT;
@@ -1363,6 +1400,7 @@ int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits,
       printf("bitmap_grow : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
+   #endif
    
    if (end == NULL) {
       if (size_in_bits == 0) {
@@ -1436,6 +1474,7 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
    unsigned char count;
    
    //input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_shrink : map is NULL\n");
       return WRONG_INPUT;
@@ -1460,8 +1499,10 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
       printf("bitmap_shrink : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
+   #endif
    
    if (end == NULL) {
+      #ifndef SIMPLE_BITMAP_SKIP_CHECK
       if (size_in_bits == 0) {
          printf("bitmap_shrink : end is NULL but size is 0 as well\n");
          return WRONG_INPUT;
@@ -1474,12 +1515,14 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
          printf("bitmap_shrink : request length is same as old length\n");
          return WRONG_INPUT;
       }
+      #endif
       old_end = map->end;
       old_length = map->length;
       map->end = map->base + get_bitmap_map_block_index(size_in_bits-1);
       map->length = size_in_bits;
    }
    else {
+      #ifndef SIMPLE_BITMAP_SKIP_CHECK
       if (end > map->end) {
          printf("bitmap_shrink : request end is higher than old end\n");
          return WRONG_INPUT;
@@ -1488,6 +1531,7 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
          printf("bitmap_shrink : request end is same as old end\n");
          return WRONG_INPUT;
       }
+      #endif
       old_end = map->end;
       old_length = map->length;
       map->end = end;
@@ -1511,10 +1555,12 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
 
 int bitmap_show (simple_bitmap* map) {
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_show : map is NULL\n");
       return WRONG_INPUT;
    }
+   #endif
    printf("####################\n");
    
    printf("map->base : %p\n", map->base);
@@ -1530,10 +1576,12 @@ int bitmap_show (simple_bitmap* map) {
 
 int bitmap_cont_group_show (bitmap_cont_group* grp) {
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (grp == NULL) {
       printf("bitmap_cont_group_show : grp is NULL\n");
       return WRONG_INPUT;
    }
+   #endif
    printf("####################\n");
    
    printf("grp->bit_type : %x\n", grp->bit_type);
@@ -1551,6 +1599,7 @@ int bitmap_raw_show (simple_bitmap* map) {
    map_block* cur;
    
    // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
       printf("bitmap_raw_show : map is NULL\n");
       return WRONG_INPUT;
@@ -1575,6 +1624,7 @@ int bitmap_raw_show (simple_bitmap* map) {
       printf("bitmap_raw_show : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
+   #endif
    printf("####################\n");
    
    printf("bitmap_raw :\n");
