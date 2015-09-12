@@ -1,0 +1,119 @@
+Proof for main rotation algorithm used in simple_bitmap since v0.08
+Author : darrenldl <dldldev@yahoo.com>
+Date   : 13-9-2015
+
+Note:
+   This is a practice for me very much, and is the first actual proof I wrote for an algorithm
+   I devised independently(obviously same idea must have been done before elsewhere). 
+   So it may not make sense at all, as I do not read/write a lot of proofs on a regular basis yet.
+
+Starts in bitmap_shift function in simple_bitmap.c, refer to comments within
+The rotation algorithm shifts an array of blocks by provided units and provided direction
+
+Constants:
+T     : total number of blocks in the array
+MI    : number of blocks to move from input
+M     : actual moving size
+
+For an array of blocks of arbitrary length, we first calculate the moving size(M),
+the number of blocks to move/swap at any single time, via taking
+min(MI, T - MI).
+
+The actual shifting direction is defined depending on the resulting M.
+In the case that the M != MI,
+the actual shifting direction is the opposite of provided direction,
+as shifting to left by k units, if k > T, is same as shifting to right by T - k,
+and vice versa.
+
+The following uses an example of initially shifting towards left,
+but the initial direction does not matter, which will be justified at the end.
+
+Now we divide the array into units of size M :
+
+arr0 : | n | lint0 | n-1 | ... | 1 | 0 |
+
+where {n ... 0} are the indices of the units, lint being the "extra bit",
+the size of lint0 is T % M, so T = (n+1)*M + size of lint.
+
+We now define a sub routine that is applied to arr0
+i <- 0
+while i < n
+   swap(arr0[i], arr0[n])
+   i <- i + 1
+
+The end goal of the application of this sub routine is to achieve this :
+arr0 : | n-1 | lint0 | n-2 | ... | 0 | n |  (using the old index)
+
+It is important to note that due to our partitioning, shifting to left by one element
+in arr0 is same as shifting by M number of blocks, as each element of arr0 is of size M.
+
+Proof that the subroutine reaches the end goal:
+After the 1st iteration, arr0[0] now holds the previous value of arr0[n],
+completing the first element of end goal.
+And also arr0[n] now holds the previously value of arr0[0].
+The state match the loop invariants below.
+
+Loop invariant:
+   The elements {arr0[i-1] ... arr0[0]} are correctly placed.
+   arr0[n] holds previous value of arr[i-1], for i >= 1
+
+At k th iteration(k = i + 1), i >= 1
+   Since arr0[n] holds the previous value of arr0[i-1],   (by loop invariant)
+   after swapping, arr0[i] now holds the previous value of arr0[i-1],
+   which is equivalent to shifting arr0[i-1] to left by one.
+   And arr0[n] holds the previous value of arr0[i].
+   After incrementing i by 1,
+   arr0[i-1] contains previous value of arr0[i-2], thus is correctly placed.
+   Also arr0[n] now holds the previous value of arr0[i-1].
+   Thus both loop invariants hold.
+
+After sub routine, since {arr0[n-1] ... arr0[0]} are all correctly placed,
+arr0[n] must be correctly placed as well since there are no other spaces left.
+
+Now we can see that lint still requires shifting by M, that is,
+we want to rearrange the current state from :
+| n | lint0 | ...
+to 
+| lint0 | n | ...     (A)
+
+Again, we take min(size of lint0, M), but since the size of lint0 must be smaller than M
+by definition, min always returns size of lint0, denoted as L.
+
+Now let arr1 : | n | lint |, as these two partitions are the ones we concern.
+We divide arr1 into units of L :
+arr1 : | 0 | 1 | ... | n-1 | lint1 | n |
+
+where lint1 is the new lint
+
+Note that | n | in arr1 is the lint of arr0.
+
+Now we repeat the subroutine shown above,
+then we reach :
+arr1 : | n | 0 | ... | n-2 | lint1 | n-1 |   (using old index)
+
+From above, we can see that now lint is on the left side, as we wanted at point (A),
+and all partitions of | n | of arr0 have been moved correctly, except that in | lint1 | n-1 | of arr1,
+we face similar situation where we need to shift lint to the other side, same problem
+presented at point (A).
+
+So we continue repeating above procedures until lint no longer exists,
+that is, the total number of the arrN is the multiple of lint of arr(N-1).
+
+The size of the last lint to appear may not be 1, but the last array, arrN, must have no lint as
+size of lint must tend towards 1 as size of lint in arrK is always smaller than size of each element in arr(K-1),
+and when it reaches one, it becomes an element of arrN, which means arrN now has no lint, for some N.
+
+As lint no longer exists for arrN, the partitions will be shifted properly after the execution of sub routine.
+
+Note that for the above procedure, there was no strict requirement about indexing, but the indexing
+did represent the direction. The only requirement is that the indexing must be reversed everytime
+we move to smaller array to handle the lint in current array(refer to point (A)).
+
+The reversing of the index can be undeerstood in this way:
+We are always shifting the elements in array forward by one, j+1 th element <- j th element, etc.
+So to change direction, we reverse the indexing.
+In actual code, there is an actual variable to control direction, the indexing used here is to simplify
+the proof.
+
+Lastly, the new lint is fixed to be on the side closer to the end of array is to maintain
+the structure suggested at the beginning. The structure is largely for simplification and consistency.
