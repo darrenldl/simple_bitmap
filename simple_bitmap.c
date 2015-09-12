@@ -528,10 +528,10 @@ int bitmap_not (simple_bitmap* map) {
    return 0;
 }
 
-/*
-int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size, bit_index map1_offset) {
+int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size) {
    map_block* cur1;
    map_block* cur2;
+   map_block* cur_ret;
    
    unsigned char count;
    
@@ -589,35 +589,263 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
       printf("bitmap_and : map2 : inconsistent statistics of number of ones and zeros\n");
       return CORRUPTED_DATA;
    }
+   if (ret_map == NULL) {
+      printf("bitmap_and : ret_map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (ret_map->base == NULL) {
+      printf("bitmap_and : ret_map->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->end == NULL) {
+      printf("bitmap_and : ret_map->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->length == 0) {
+      printf("bitmap_and : ret_map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->base + get_bitmap_map_block_index(ret_map->length-1) != ret_map->end) {
+      printf("bitmap_and : ret_map : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->number_of_zeros + ret_map->number_of_ones != ret_map->length) {
+      printf("bitmap_and : ret_map : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
    
    if (enforce_same_size) {
-      if (map1->length != map2->length) {
+      if (!(map1->length == map2->length == ret_map->length)) {
          printf("bitmap_and : map1 and map2 have different sizes\n");
          return WRONG_INPUT;
       }
    }
-   
-   if (map1_offset >= map1->length;) {
-      printf("bitmap_and : map1 offset is out of range\n");
-      return WRONG_INPUT;
-   }
    #endif
    
    // do AND bitwise operation
-   for (cur1 = map1->base, cur2 = map2->base; cur <= map->end; cur++) {
-      *cur = ~(*cur);
+   for (cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
+         cur1 <= map1->end || cur2 <= map2->end || cur_ret <= ret_map->end;
+         cur1++, cur2++, cur_ret++) {
+      *cur_ret = *cur1 & *cur2;
    }
    
-   // clean up the edge
-   mask = 0;
-   for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
-      mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
-   }
-   *(map->end) &= mask;
+   bitmap_count_zeros_and_ones(ret_map);
    
    return 0;
 }
-*/
+
+int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size) {
+   map_block* cur1;
+   map_block* cur2;
+   map_block* cur_ret;
+   
+   unsigned char count;
+   
+   map_block mask;
+   
+   bit_index temp;
+   
+   // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
+   if (map1 == NULL) {
+      printf("bitmap_or : map1 is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map1->base == NULL) {
+      printf("bitmap_or : map1->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->end == NULL) {
+      printf("bitmap_or : map1->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->length == 0) {
+      printf("bitmap_or : map1 has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->base + get_bitmap_map_block_index(map1->length-1) != map1->end) {
+      printf("bitmap_or : map1 : is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->number_of_zeros + map1->number_of_ones != map1->length) {
+      printf("bitmap_or : map1 : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2 == NULL) {
+      printf("bitmap_or : map2 is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map2->base == NULL) {
+      printf("bitmap_or : map2->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->end == NULL) {
+      printf("bitmap_or : map2->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->length == 0) {
+      printf("bitmap_or : map2 has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->base + get_bitmap_map_block_index(map2->length-1) != map2->end) {
+      printf("bitmap_or : map2 : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->number_of_zeros + map2->number_of_ones != map2->length) {
+      printf("bitmap_or : map2 : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map == NULL) {
+      printf("bitmap_or : ret_map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (ret_map->base == NULL) {
+      printf("bitmap_or : ret_map->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->end == NULL) {
+      printf("bitmap_or : ret_map->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->length == 0) {
+      printf("bitmap_or : ret_map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->base + get_bitmap_map_block_index(ret_map->length-1) != ret_map->end) {
+      printf("bitmap_or : ret_map : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->number_of_zeros + ret_map->number_of_ones != ret_map->length) {
+      printf("bitmap_or : ret_map : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   
+   if (enforce_same_size) {
+      if (!(map1->length == map2->length == ret_map->length)) {
+         printf("bitmap_or : map1 and map2 have different sizes\n");
+         return WRONG_INPUT;
+      }
+   }
+   #endif
+   
+   // do OR bitwise operation
+   for (cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
+         cur1 <= map1->end || cur2 <= map2->end || cur_ret <= ret_map->end;
+         cur1++, cur2++, cur_ret++) {
+      *cur_ret = *cur1 | *cur2;
+   }
+   
+   bitmap_count_zeros_and_ones(ret_map);
+   
+   return 0;
+}
+
+int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size) {
+   map_block* cur1;
+   map_block* cur2;
+   map_block* cur_ret;
+   
+   unsigned char count;
+   
+   map_block mask;
+   
+   bit_index temp;
+   
+   // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
+   if (map1 == NULL) {
+      printf("bitmap_xor : map1 is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map1->base == NULL) {
+      printf("bitmap_xor : map1->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->end == NULL) {
+      printf("bitmap_xor : map1->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->length == 0) {
+      printf("bitmap_xor : map1 has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->base + get_bitmap_map_block_index(map1->length-1) != map1->end) {
+      printf("bitmap_xor : map1 : is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->number_of_zeros + map1->number_of_ones != map1->length) {
+      printf("bitmap_xor : map1 : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2 == NULL) {
+      printf("bitmap_xor : map2 is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map2->base == NULL) {
+      printf("bitmap_xor : map2->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->end == NULL) {
+      printf("bitmap_xor : map2->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->length == 0) {
+      printf("bitmap_xor : map2 has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->base + get_bitmap_map_block_index(map2->length-1) != map2->end) {
+      printf("bitmap_xor : map2 : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->number_of_zeros + map2->number_of_ones != map2->length) {
+      printf("bitmap_xor : map2 : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map == NULL) {
+      printf("bitmap_xor : ret_map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (ret_map->base == NULL) {
+      printf("bitmap_xor : ret_map->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->end == NULL) {
+      printf("bitmap_xor : ret_map->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->length == 0) {
+      printf("bitmap_xor : ret_map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->base + get_bitmap_map_block_index(ret_map->length-1) != ret_map->end) {
+      printf("bitmap_xor : ret_map : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (ret_map->number_of_zeros + ret_map->number_of_ones != ret_map->length) {
+      printf("bitmap_xor : ret_map : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   
+   if (enforce_same_size) {
+      if (!(map1->length == map2->length == ret_map->length)) {
+         printf("bitmap_xor : map1 and map2 have different sizes\n");
+         return WRONG_INPUT;
+      }
+   }
+   #endif
+   
+   // do XOR bitwise operation
+   for (cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
+         cur1 <= map1->end || cur2 <= map2->end || cur_ret <= ret_map->end;
+         cur1++, cur2++, cur_ret++) {
+      *cur_ret = *cur1 ^ *cur2;
+   }
+   
+   bitmap_count_zeros_and_ones(ret_map);
+   
+   return 0;
+}
+
 int bitmap_read (simple_bitmap* map, bit_index index, map_block* result) {
    map_block* cur;
    

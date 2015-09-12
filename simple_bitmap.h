@@ -119,8 +119,9 @@ int bitmap_one    (simple_bitmap* map);
 int bitmap_shift  (simple_bitmap* map, bit_index offset, char direction, map_block default_val, unsigned char wrap_around);
 
 int bitmap_not    (simple_bitmap* map);
-int bitmap_and    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map);  // not implemented yet
-int bitmap_or     (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map);  // not implemented yet
+int bitmap_and    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size);
+int bitmap_or     (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size);
+int bitmap_xor    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size);
 
 int bitmap_read   (simple_bitmap* map, uint_fast32_t index, map_block* result);
 int bitmap_write  (simple_bitmap* map, uint_fast32_t index, map_block input_value);
