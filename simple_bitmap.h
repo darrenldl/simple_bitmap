@@ -115,6 +115,12 @@ int bitmap_one    (simple_bitmap* map);
  *       0 - overwrite space with 0s
  *       1 - overwrite space with 1s
  *      >1 - leave the space as it is
+ * 
+ *    The rotation algorithm used within has been verified formally(mathematically),
+ *    the actual proof is provided in s_b_bitshift_proof.txt file(unix newline encoding)
+ * 
+ *    The rotation algorithm was devised independently, thus the style and proof
+ *    may not match any of the implemention done by others
  */
 int bitmap_shift  (simple_bitmap* map, bit_index offset, char direction, map_block default_val, unsigned char wrap_around);
 

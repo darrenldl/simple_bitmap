@@ -318,6 +318,7 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
       
       move_count = s_b_min(blocks_to_shift, get_bitmap_map_block_number(map->length) - blocks_to_shift);
       
+      // main rotation algorithm begins
       if (direction >= 0) {
          if (move_count == blocks_to_shift) {
             shrink_direction = 1;
@@ -351,6 +352,7 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
             move_count = start - end + 1 - move_count;
          }
       }
+      // main rotation algorithm ends
       
       // handle the bitwise mismatching
       if (get_bitmap_excess_bits(map->length)) {
