@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.07
+ * Version : 0.08
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -38,6 +38,9 @@
 #ifdef SIMPLE_BITMAP_SILENT
    #define printf(...)
 #endif
+
+#define s_b_min(a, b) ((a) < (b) ? (a) : (b))
+#define s_b_max(a, b) ((a) > (b) ? (a) : (b))
 
 int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast32_t size_in_bits, map_block default_value) {
    int ret_temp;
@@ -162,6 +165,459 @@ int bitmap_one (simple_bitmap* map) {
    return 0;
 }
 
+static int map_blocks_ferris_wheel_flip (map_block* start, map_block* end, uint_fast32_t count) {
+   map_block* start1 = start;
+   map_block* start2 = end - count + 1;
+   map_block temp;
+   
+   for (; start2 <= end; start1++, start2++) {
+      temp = *start2;
+      *start2 = *start1;
+      *start1 = temp;
+   }
+   
+   return 0;
+}
+
+int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_block default_val, unsigned char wrap_around) {
+   map_block* start;
+   map_block* end;
+   
+   map_block* end2;
+   
+   map_block mask_clear;
+   
+   map_block temp;
+   
+   uint_fast16_t blocks_to_shift;
+   
+   unsigned char bits_to_shift;
+   
+   unsigned char count;
+   
+   char shrink_direction;
+   
+   uint_fast32_t move_count;
+   
+   map_block* start1;
+   
+   map_block* cur;
+   
+   map_block* temp_end;
+   
+   // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
+   if (map == NULL) {
+      printf("bitmap_shift : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->base == NULL) {
+      printf("bitmap_shift : base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->end == NULL) {
+      printf("bitmap_shift : end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->length == 0) {
+      printf("bitmap_shift : map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->base + get_bitmap_map_block_index(map->length-1) != map->end) {
+      printf("bitmap_shift : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->number_of_zeros + map->number_of_ones != map->length) {
+      printf("bitmap_shift : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   #endif
+   
+   blocks_to_shift = offset / MAP_BLOCK_BIT;
+   
+   bits_to_shift = offset % MAP_BLOCK_BIT;
+   
+   if (blocks_to_shift == 0) {
+      goto bitshift;
+   }
+   
+   if (!wrap_around) {  // no need to rotate
+      if (blocks_to_shift >= get_bitmap_map_block_number(map->length)) {
+         if (default_val > 1) {
+            ; // do nothing
+         }
+         else if (default_val) {
+            bitmap_one(map);
+         }
+         else {
+            bitmap_zero(map);
+         }
+         return 0;
+      }
+      
+      if (direction >= 0) {
+         start = map->end - blocks_to_shift;
+         start1 = map->end;
+         
+         for (; start1 >= map->base; start--, start1--) {
+            *start1 = *start;
+         }
+         
+         start = map->base + blocks_to_shift - 1;
+         
+         // overwrite remaining blocks with default value
+         if (default_val > 1) {
+            ; // do nothing
+         }
+         else {
+            if (default_val == 1) {
+               temp = (map_block) -1;
+            }
+            else {
+               temp = 0;
+            }
+            for (; start >= map->base; start--) {
+               *start = temp;
+            }
+         }
+      }
+      else {
+         start = map->base;
+         start1 = map->base + blocks_to_shift;
+         
+         for (; start1 <= map->end; start++, start1++) {
+            *start = *start1;
+         }
+         
+         start = map->end - blocks_to_shift + 1;
+         
+         // overwrite remaining blocks with default value
+         if (default_val > 1) {
+            ; // do nothing
+         }
+         else {
+            if (default_val == 1) {
+               temp = (map_block) -1;
+            }
+            else {
+               temp = 0;
+            }
+            for (; start <= map->end; start++) {
+               *start = temp;
+            }
+         }
+      }
+   }
+   else {      // need to rotate
+      if (blocks_to_shift >= map->length) {
+         blocks_to_shift = blocks_to_shift % get_bitmap_map_block_number(map->length);
+      }
+      
+      start = map->base;
+      end = map->end;
+      
+      move_count = s_b_min(blocks_to_shift, get_bitmap_map_block_number(map->length) - blocks_to_shift);
+      
+      if (direction >= 0) {
+         if (move_count == blocks_to_shift) {
+            shrink_direction = 1;
+         }
+         else {
+            shrink_direction = -1;
+         }
+      }
+      else {
+         if (move_count == blocks_to_shift) {
+            shrink_direction = -1;
+         }
+         else {
+            shrink_direction = 1;
+         }
+      }
+      
+      while (start < end) {
+         map_blocks_ferris_wheel_flip(start, end, move_count);
+         
+         if (shrink_direction == 1) {
+            start += move_count;
+         }
+         else {
+            end -= move_count;
+         }
+         
+         if (start - end < 2 * move_count) { // need to flip direction and reduce unit
+            shrink_direction *= -1;
+            // move_count = min(move_count, start - end + 1 - move_count);
+            move_count = start - end + 1 - move_count;
+         }
+      }
+      
+      // handle the bitwise mismatching
+      if (get_bitmap_excess_bits(map->length)) {
+         if (direction >= 0) {   // shift to right
+            // handle the remaining unshifted blocks
+            for (cur = map->base+blocks_to_shift-1;
+                  cur > map->base; cur--) {
+               temp = *(cur-1) << get_bitmap_excess_bits(map->length);
+               
+               *cur >>= MAP_BLOCK_BIT - get_bitmap_excess_bits(map->length);
+               *cur |= temp;
+            }
+            
+            // handle the last block
+            temp = (*(map->end) << get_bitmap_excess_bits(map->length));
+            
+            *(map->base) >>= MAP_BLOCK_BIT - get_bitmap_excess_bits(map->length);
+            *(map->base) |= temp;
+         }
+         else {      // shift to left
+            // handle the previously last block
+            temp = *(map->end-blocks_to_shift+1) >> get_bitmap_excess_bits(map->length);
+            
+            *(map->end-blocks_to_shift) |= temp;
+            
+            // shift remaining blocks to left including the currently last block
+            for (cur = map->end-blocks_to_shift+1;
+                  cur < map->end; cur++) {
+               temp = *(cur+1) >> get_bitmap_excess_bits(map->length);
+               
+               *cur <<= MAP_BLOCK_BIT - get_bitmap_excess_bits(map->length);
+               *cur |= temp;
+            }
+            
+            // handle the last block
+            *(map->end) <<= MAP_BLOCK_BIT - get_bitmap_excess_bits(map->length);
+         }
+      }
+   }
+   
+   bitmap_count_zeros_and_ones(map);
+   
+   bitshift:
+   if (bits_to_shift == 0) {
+      printf("No bit to shift\n");
+      return 0;
+   }
+   
+   if (!wrap_around) {  // no need to recycle
+      if (direction >= 0) {   // shift to right
+         for (cur = map->end; cur > map->base; cur--) {
+            *cur >>= bits_to_shift;
+            
+            *cur |= (*(cur-1) << (MAP_BLOCK_BIT - bits_to_shift));
+         }
+         
+         *(map->base) >>= bits_to_shift;
+      }
+      else {      // shift to left
+         for (cur = map->base; cur < map->end; cur++) {
+            *cur <<= bits_to_shift;
+            
+            *cur |= (*(cur+1) >> (MAP_BLOCK_BIT - bits_to_shift));
+         }
+         
+         *(map->end) <<= bits_to_shift;
+      }
+   }
+   else {   // need to rotate
+      if (direction >= 0) {   // shift to right
+         temp = *(map->end);
+         
+         for (cur = map->end; cur > map->base; cur--) {
+            *cur >>= bits_to_shift;
+            
+            *cur |= (*(cur-1) << (MAP_BLOCK_BIT - bits_to_shift));
+         }
+         
+         *(map->base) >>= bits_to_shift;
+         
+         // piece the previous last block into the start first
+         if (bits_to_shift < get_bitmap_map_block_bit_index(map->length-1)+1) {
+            temp <<= get_bitmap_excess_bits(map->length) - bits_to_shift;
+         }
+         else {
+            temp >>= bits_to_shift - get_bitmap_excess_bits(map->length);
+            temp |= *(map->end) << get_bitmap_excess_bits(map->length);
+         }
+         
+         *(map->base) |= temp;
+      }
+      else {      // shift to left
+         temp = *(map->base);
+         
+         for (cur = map->base; cur < map->end; cur++) {
+            *cur <<= bits_to_shift;
+            
+            *cur |= (*(cur+1) >> (MAP_BLOCK_BIT - bits_to_shift));
+         }
+         
+         *(map->end) <<= bits_to_shift;
+         
+         // piece the previous first block into the end
+         if (bits_to_shift < get_bitmap_excess_bits(map->length)) {
+            temp >>= get_bitmap_excess_bits(map->length) - bits_to_shift;
+            
+            *(map->end) |= temp;
+         }
+         else {
+            *(map->end-1) |= temp >> MAP_BLOCK_BIT - (bits_to_shift - get_bitmap_excess_bits(map->length));
+            *(map->end) |= temp << bits_to_shift - get_bitmap_excess_bits(map->length);
+         }
+      }
+   }
+   
+   bitmap_count_zeros_and_ones(map);
+   
+   return 0;
+}
+
+int bitmap_not (simple_bitmap* map) {
+   map_block* cur;
+   
+   unsigned char count;
+   
+   map_block mask;
+   
+   bit_index temp;
+   
+   // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
+   if (map == NULL) {
+      printf("bitmap_not : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map->base == NULL) {
+      printf("bitmap_not : base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->end == NULL) {
+      printf("bitmap_not : end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->length == 0) {
+      printf("bitmap_not : map has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->base + get_bitmap_map_block_index(map->length-1) != map->end) {
+      printf("bitmap_not : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map->number_of_zeros + map->number_of_ones != map->length) {
+      printf("bitmap_not : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   #endif
+   
+   // flip bits
+   for (cur = map->base; cur <= map->end; cur++) {
+      *cur = ~(*cur);
+   }
+   
+   // clean up the edge
+   mask = 0;
+   for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
+      mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+   }
+   *(map->end) &= mask;
+   
+   // switch numbers
+   temp = map->number_of_ones;
+   map->number_of_ones = map->number_of_zeros;
+   map->number_of_zeros = temp;
+   
+   return 0;
+}
+
+/*
+int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size, bit_index map1_offset) {
+   map_block* cur1;
+   map_block* cur2;
+   
+   unsigned char count;
+   
+   map_block mask;
+   
+   bit_index temp;
+   
+   // input check
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
+   if (map1 == NULL) {
+      printf("bitmap_and : map1 is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map1->base == NULL) {
+      printf("bitmap_and : map1->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->end == NULL) {
+      printf("bitmap_and : map1->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->length == 0) {
+      printf("bitmap_and : map1 has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->base + get_bitmap_map_block_index(map1->length-1) != map1->end) {
+      printf("bitmap_and : map1 : is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map1->number_of_zeros + map1->number_of_ones != map1->length) {
+      printf("bitmap_and : map1 : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2 == NULL) {
+      printf("bitmap_and : map2 is NULL\n");
+      return WRONG_INPUT;
+   }
+   if (map2->base == NULL) {
+      printf("bitmap_and : map2->base is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->end == NULL) {
+      printf("bitmap_and : map2->end is NULL\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->length == 0) {
+      printf("bitmap_and : map2 has no length\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->base + get_bitmap_map_block_index(map2->length-1) != map2->end) {
+      printf("bitmap_and : map2 : length is inconsistent with base and end\n");
+      return CORRUPTED_DATA;
+   }
+   if (map2->number_of_zeros + map2->number_of_ones != map2->length) {
+      printf("bitmap_and : map2 : inconsistent statistics of number of ones and zeros\n");
+      return CORRUPTED_DATA;
+   }
+   
+   if (enforce_same_size) {
+      if (map1->length != map2->length) {
+         printf("bitmap_and : map1 and map2 have different sizes\n");
+         return WRONG_INPUT;
+      }
+   }
+   
+   if (map1_offset >= map1->length;) {
+      printf("bitmap_and : map1 offset is out of range\n");
+      return WRONG_INPUT;
+   }
+   #endif
+   
+   // do AND bitwise operation
+   for (cur1 = map1->base, cur2 = map2->base; cur <= map->end; cur++) {
+      *cur = ~(*cur);
+   }
+   
+   // clean up the edge
+   mask = 0;
+   for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
+      mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+   }
+   *(map->end) &= mask;
+   
+   return 0;
+}
+*/
 int bitmap_read (simple_bitmap* map, bit_index index, map_block* result) {
    map_block* cur;
    

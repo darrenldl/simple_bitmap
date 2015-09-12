@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.07
+ * Version : 0.08
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -55,6 +55,7 @@
 #define get_bitmap_map_block_number(size_in_bits)   ((size_in_bits) / MAP_BLOCK_BIT + (((size_in_bits) % MAP_BLOCK_BIT) == 0 ? 0 : 1))
 #define get_bitmap_map_block_index(bit_index)       ((bit_index) / (MAP_BLOCK_BIT))
 #define get_bitmap_map_block_bit_index(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
+#define get_bitmap_excess_bits(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
 
 #define MAP_BLOCK_BIT   CHAR_BIT
 
@@ -91,6 +92,35 @@ int bitmap_init   (simple_bitmap* map, map_block* base, map_block* end, uint_fas
 
 int bitmap_zero   (simple_bitmap* map);
 int bitmap_one    (simple_bitmap* map);
+
+// this function does not invoke malloc or any other means to obtain dynamic memory
+// the rotatation is done in place with fixed static memory consumption
+// this increases code complexity but avoids messing up programs' memory allocation scheme
+/* Note:
+ *    offset is in bits
+ * 
+ *    direction:
+ *      >= 0 - shift to right
+ *       < 0 - shift to left
+ * 
+ *    wrap_around means the same as rotate, if that makes more sense
+ *    
+ *    default value is only used when wrap around is not enabled
+ * 
+ *    If wrap around is not enabled,
+ *    then the new space is replaced by 1 or 0 or nothing,
+ *    depending on the default value(see below)
+ *    
+ *    default value:
+ *       0 - overwrite space with 0s
+ *       1 - overwrite space with 1s
+ *      >1 - leave the space as it is
+ */
+int bitmap_shift  (simple_bitmap* map, bit_index offset, char direction, map_block default_val, unsigned char wrap_around);
+
+int bitmap_not    (simple_bitmap* map);
+int bitmap_and    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map);  // not implemented yet
+int bitmap_or     (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map);  // not implemented yet
 
 int bitmap_read   (simple_bitmap* map, uint_fast32_t index, map_block* result);
 int bitmap_write  (simple_bitmap* map, uint_fast32_t index, map_block input_value);
