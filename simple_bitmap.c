@@ -395,7 +395,6 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
    
    bitshift:
    if (bits_to_shift == 0) {
-      printf("No bit to shift\n");
       return 0;
    }
    
