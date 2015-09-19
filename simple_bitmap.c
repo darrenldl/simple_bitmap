@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.08
+ * Version : 0.09
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -42,10 +42,37 @@
 #define s_b_min(a, b) ((a) < (b) ? (a) : (b))
 #define s_b_max(a, b) ((a) > (b) ? (a) : (b))
 
+#define s_b_encrypt(start, size, counter, key) do {\
+               for (counter = 0; counter < size; counter++) {\
+                  *((unsigned char*) start + counter) ^= (unsigned char) (key >> ((counter % 4) * CHAR_BIT));\
+               }\
+            } while (0)
+#define s_b_decrypt(start, size, counter, key) s_b_encrypt(start, size, counter, key)
+
+#define s_b_rand_fill(start, size, counter, rand_ctx, temp) do {\
+               for (counter = 0; counter < size; counter++) {\
+                  if (counter % 4 == 0) {temp = rand(&rand_ctx);}\
+                  *((unsigned char*) start + counter) = (unsigned char) (temp >> ((counter % 4) * CHAR_BIT));\
+               }\
+            } while (0)
+
+#define s_b_val_fill(start, size, counter, val) do {\
+               for (counter = 0; counter < size; counter++) {\
+                  *((unsigned char*) start + counter) = (unsigned char) (val);\
+               }\
+            } while (0)
+
 int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast32_t size_in_bits, map_block default_value) {
    int ret_temp;
    
-   map->base = base;
+   #ifdef SIMPLE_BITMAP_META_DATA_SECURITY
+   uint_least8_t offsets;
+   
+   unsigned char count = 0;
+   
+   uint_fast32_t temp;
+   
+   time_t timer;
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -54,6 +81,41 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast3
       return WRONG_INPUT;
    }
    #endif
+   
+   // setup global random things
+   if (!rand_things_init) {
+      pthread_mutex_lock(&rand_things_init_lock);
+      if (!rand_things_init) {
+         // initialise randomness
+         time(&timer);
+         
+         for (count = 0; count < sizeof(timer); count++) {
+            s_b_rand_ctx.randrsl[count] = (timer >> (count*8))&((unsigned char) -1);
+         }
+         
+         randinit(&s_b_rand_ctx);
+         
+         rand_encrypt_xor_meta = rand(&s_b_rand_ctx);
+         rand_encrypt_add_meta = rand(&s_b_rand_ctx);
+         rand_encrypt_xor_meta2 = rand(&s_b_rand_ctx);
+         rand_encrypt_add_meta2 = rand(&s_b_rand_ctx);
+         rand_cookie_correct_meta = rand(&s_b_rand_ctx);
+      }
+      rand_things_init = 1;
+      pthread_mutex_unlock(&rand_things_init_lock);
+   }
+   
+   map->obj_rand_encrypt_xor_meta = rand(&s_b_rand_ctx);
+   map->obj_rand_encrypt_add_meta = rand(&s_b_rand_ctx);
+   map->obj_rand_encrypt_xor_meta2 = rand(&s_b_rand_ctx);
+   map->obj_rand_encrypt_add_meta2 = rand(&s_b_rand_ctx);
+   map->offsets                   = rand(&s_b_rand_ctx);
+   map->obj_cookie_meta           = rand(&s_b_rand_ctx);
+   
+   offsets = map->offsets;
+   #endif
+   
+   // input check
    if (end == NULL) {
       #ifndef SIMPLE_BITMAP_SKIP_CHECK
       if (size_in_bits == 0) {
@@ -61,7 +123,9 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast3
          return WRONG_INPUT;
       }
       #endif
+      
       map->end = base + get_bitmap_map_block_index(size_in_bits-1);
+      
       map->length = size_in_bits;
    }
    else {
@@ -69,10 +133,17 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast3
       map->length = (end - base + 1) * MAP_BLOCK_BIT;
    }
    
+   map->base = base;
+   
+   bitmap_show(map);
+   
+   bitmap_meta_encrypt(map);
+   
    if (default_value > 1) {
-      ;     // do nothing
+      // ;  // do nothing
+      return bitmap_count_zeros_and_ones(map);
    }
-   else if (default_value & 0x1) {
+   else if (default_value) {
       return bitmap_one(map);
    }
    else {
@@ -82,8 +153,267 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast3
    return 0;
 }
 
+#ifdef SIMPLE_BITMAP_META_DATA_SECURITY
+int bitmap_meta_encrypt (simple_bitmap* map) {
+   uint32_t key;
+   uint32_t key2;
+   
+   unsigned char count;
+   unsigned char count2;
+   
+   uint_least8_t offsets;
+   
+   uint_least8_t rand_indicators;
+   
+   uint_fast32_t temp;
+   
+   unsigned char* cur1,* cur2;
+   
+   unsigned char rand_degrees[5][2];
+   //unsigned char rand_revert_to[5];
+   
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
+   if (map == NULL) {
+      printf("bitmap_meta_encrypt : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   #endif
+   
+   key = (map->obj_rand_encrypt_xor_meta + rand_encrypt_add_meta)
+         ^ rand_encrypt_xor_meta + (map->obj_rand_encrypt_add_meta ^ rand_encrypt_xor_meta);
+         
+   key2 = (map->obj_rand_encrypt_xor_meta2 + rand_encrypt_add_meta2)
+         ^ rand_encrypt_xor_meta2 + (map->obj_rand_encrypt_add_meta2 ^ rand_encrypt_xor_meta2);
+   
+   count = 0;
+   
+   offsets = map->offsets;
+   
+   s_b_encrypt(&map->offsets, sizeof(map->offsets), count, key);
+   
+   // copy values over to secure data fields
+   map->base_a[((offsets >> OFF_BA)&0x1)]    = map->base;
+   map->end_a[((offsets >> OFF_EN)&0x1)]     = map->end;
+   map->length_a[((offsets >> OFF_LE)&0x1)]  = map->length;
+   map->number_of_zeros_a[((offsets >> OFF_NZ)&0x1)]  = map->number_of_zeros;
+   map->number_of_ones_a[((offsets >> OFF_NO)&0x1)]   = map->number_of_ones;
+   
+   // remove pattern that can cause major weakness
+   rand_indicators = 0;
+   // handle base and end addresses
+   rand_degrees[OFF_BA][0] = 0xFF;
+   rand_degrees[OFF_BA][1] = 0;
+   rand_degrees[OFF_EN][0] = 0xFF;
+   rand_degrees[OFF_EN][1] = 0;
+   for (count = 0, cur1 = (unsigned char*) &map->base_a[((offsets >> OFF_BA)&0x1)], cur2 = (unsigned char*) &map->end_a[((offsets >> OFF_EN)&0x1)];
+         count < sizeof(map->base_a[0]);
+         count++, cur1++, cur2++) {
+      if (*cur1 == 0x00) {
+         if (rand_degrees[OFF_BA][0] == 0xFF) {
+            rand_degrees[OFF_BA][0] = count;
+         }
+         rand_degrees[OFF_BA][1] = count;
+      }
+      if (*cur2 == 0x00) {
+         if (rand_degrees[OFF_EN][0] == 0xFF) {
+            rand_degrees[OFF_EN][0] = count;
+         }
+         rand_degrees[OFF_EN][1] = count;
+      }
+   }
+   if (rand_degrees[OFF_BA][1] - rand_degrees[OFF_BA][0] + 1 > 0) {
+      rand_indicators |= 0x1 << OFF_BA;
+   }
+   if (rand_degrees[OFF_EN][1] - rand_degrees[OFF_EN][0] + 1 > 0) {
+      rand_indicators |= 0x1 << OFF_EN;
+   }
+   rand_degrees[OFF_LE][0] = 0xFF;
+   rand_degrees[OFF_LE][1] = 0;
+   for (count = 0, cur1 = (unsigned char*) &map->length_a[((offsets >> OFF_LE)&0x1)];
+         count < sizeof(map->length_a[0]);
+         count++, cur1++) {
+      if (*cur1 == 0x00) {
+         if (rand_degrees[OFF_LE][0] == 0xFF) {
+            rand_degrees[OFF_LE][0] = count;
+         }
+         rand_degrees[OFF_LE][1] = count;
+      }
+   }
+   if (rand_degrees[OFF_LE][1] - rand_degrees[OFF_LE][0] + 1 > 0) {
+      rand_indicators |= 0x1 << OFF_LE;
+   }
+   rand_degrees[OFF_NZ][0] = 0xFF;
+   rand_degrees[OFF_NZ][1] = 0;
+   rand_degrees[OFF_NO][0] = 0xFF;
+   rand_degrees[OFF_NO][1] = 0;
+   for (count = 0, cur1 = (unsigned char*) &map->number_of_zeros_a[((offsets >> OFF_NZ)&0x1)], cur2 = (unsigned char*) &map->number_of_ones_a[((offsets >> OFF_NO)&0x1)];
+         count < sizeof(map->number_of_zeros_a[0]);
+         count++, cur1++, cur2++) {
+      if (*cur1 == 0x00) {
+         if (rand_degrees[OFF_NZ][0] == 0xFF) {
+            rand_degrees[OFF_NZ][0] = count;
+         }
+         rand_degrees[OFF_NZ][1] = count;
+      }
+      if (*cur2 == 0x00) {
+         if (rand_degrees[OFF_NO][0] == 0xFF) {
+            rand_degrees[OFF_NO][0] = count;
+         }
+         rand_degrees[OFF_NO][1] = count;
+      }
+   }
+   if (rand_degrees[OFF_NZ][1] - rand_degrees[OFF_NZ][0] + 1 > 0) {
+      rand_indicators |= 0x1 << OFF_NZ;
+   }
+   if (rand_degrees[OFF_NO][1] - rand_degrees[OFF_NO][0] + 1 > 0) {
+      rand_indicators |= 0x1 << OFF_NO;
+   }
+   
+   s_b_rand_fill((unsigned char*) (&map->base_a[((offsets >> OFF_BA)&0x1)]) + rand_degrees[OFF_BA][0],
+                  rand_degrees[OFF_BA][1] - rand_degrees[OFF_BA][0] + 1, count, s_b_rand_ctx, temp);
+   s_b_rand_fill((unsigned char*) (&map->end_a[((offsets >> OFF_EN)&0x1)]) + rand_degrees[OFF_EN][0],
+                  rand_degrees[OFF_EN][1] - rand_degrees[OFF_EN][0] + 1, count, s_b_rand_ctx, temp);
+   s_b_rand_fill((unsigned char*) (&map->number_of_zeros_a[((offsets >> OFF_NZ)&0x1)]) + rand_degrees[OFF_NZ][0],
+                  rand_degrees[OFF_NZ][1] - rand_degrees[OFF_NZ][0] + 1, count, s_b_rand_ctx, temp);
+   s_b_rand_fill((unsigned char*) (&map->number_of_ones_a[((offsets >> OFF_NO)&0x1)]) + rand_degrees[OFF_NO][0],
+                  rand_degrees[OFF_NO][1] - rand_degrees[OFF_NO][0] + 1, count, s_b_rand_ctx, temp);
+   
+   map->rand_indicators = rand_indicators;
+   for (count = 0; count < 5; count++) {
+      if ((rand_indicators >> count)&0x1) {
+         map->rand_degrees[count][0] = rand_degrees[count][0];
+         map->rand_degrees[count][1] = rand_degrees[count][1];
+      }
+      else {
+         s_b_rand_fill(&map->rand_degrees[count][0], sizeof(map->rand_degrees[0][0]), count2, s_b_rand_ctx, temp);
+         s_b_rand_fill(&map->rand_degrees[count][1], sizeof(map->rand_degrees[0][0]), count2, s_b_rand_ctx, temp);
+      }
+      rand_degrees[count][0] = 0;
+      rand_degrees[count][1] = 0;
+   }
+   
+   // encrypt all secure data fields
+   s_b_encrypt(&map->base_a[((offsets >> OFF_BA)&0x1)], sizeof(map->base_a[0]), count, key);
+   s_b_encrypt(&map->end_a[((offsets >> OFF_EN)&0x1)], sizeof(map->end_a[0]), count, key);
+   s_b_encrypt(&map->length_a[((offsets >> OFF_LE)&0x1)], sizeof(map->length_a[0]), count, key);
+   s_b_encrypt(&map->number_of_zeros_a[((offsets >> OFF_NZ)&0x1)], sizeof(map->number_of_zeros_a[0]), count, key);
+   s_b_encrypt(&map->number_of_ones_a[((offsets >> OFF_NO)&0x1)], sizeof(map->number_of_ones_a[0]), count, key);
+   
+   s_b_encrypt(&map->rand_indicators, sizeof(map->rand_indicators), count, key2);
+   s_b_encrypt(&map->rand_degrees, sizeof(map->rand_degrees), count, key2);
+   
+   // fill dummy slots
+   s_b_rand_fill(&map->base_a[!((offsets >> OFF_BA)&0x1)], sizeof(map->base_a[0]), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->end_a[!((offsets >> OFF_EN)&0x1)], sizeof(map->end_a[0]), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->length_a[!((offsets >> OFF_LE)&0x1)], sizeof(map->length_a[0]), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->number_of_zeros_a[!((offsets >> OFF_NZ)&0x1)], sizeof(map->number_of_zeros_a[0]), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->number_of_ones_a[!((offsets >> OFF_NO)&0x1)], sizeof(map->number_of_ones_a[0]), count, s_b_rand_ctx, temp);
+   
+   // fill unused data slots
+   s_b_rand_fill(&map->base, sizeof(map->base), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->end, sizeof(map->end), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->length, sizeof(map->length), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->number_of_zeros, sizeof(map->number_of_zeros), count, s_b_rand_ctx, temp);
+   s_b_rand_fill(&map->number_of_ones, sizeof(map->number_of_ones), count, s_b_rand_ctx, temp);
+   
+   // clear stack
+   key = 0;
+   key2 = 0;
+   offsets = 0;
+   
+   return 0;
+}
+
+int bitmap_meta_decrypt (simple_bitmap* map) {
+   uint32_t key;
+   uint32_t key2;
+   
+   unsigned char count;
+   
+   uint_least8_t offsets;
+   
+   uint_least8_t rand_indicators;
+   
+   unsigned char rand_degrees[5][2];
+   //unsigned char rand_revert_to[5];
+   
+   #ifndef SIMPLE_BITMAP_SKIP_CHECK
+   if (map == NULL) {
+      printf("bitmap_meta_encrypt : map is NULL\n");
+      return WRONG_INPUT;
+   }
+   #endif
+   
+   key = (map->obj_rand_encrypt_xor_meta + rand_encrypt_add_meta)
+         ^ rand_encrypt_xor_meta + (map->obj_rand_encrypt_add_meta ^ rand_encrypt_xor_meta);
+         
+   key2 = (map->obj_rand_encrypt_xor_meta2 + rand_encrypt_add_meta2)
+         ^ rand_encrypt_xor_meta2 + (map->obj_rand_encrypt_add_meta2 ^ rand_encrypt_xor_meta2);
+   
+   count = 0;
+   
+   s_b_decrypt(&map->offsets, sizeof(map->offsets), count, key);
+   
+   offsets = map->offsets;
+   
+   s_b_decrypt(&map->rand_indicators, sizeof(map->rand_indicators), count, key2);
+   s_b_decrypt(&map->rand_degrees, sizeof(map->rand_degrees), count, key2);
+   
+   rand_indicators = map->rand_indicators;
+   for (count = 0; count < 5; count++) {
+      rand_degrees[count][0] = map->rand_degrees[count][0];
+      rand_degrees[count][1] = map->rand_degrees[count][1];
+   }
+   
+   // decrypt all data fields
+   s_b_decrypt(&map->base_a[((offsets >> OFF_BA)&0x1)], sizeof(map->base_a[0]), count, key);
+   s_b_decrypt(&map->end_a[((offsets >> OFF_EN)&0x1)], sizeof(map->end_a[0]), count, key);
+   s_b_decrypt(&map->length_a[((offsets >> OFF_LE)&0x1)], sizeof(map->length_a[0]), count, key);
+   s_b_decrypt(&map->number_of_zeros_a[((offsets >> OFF_NZ)&0x1)], sizeof(map->number_of_zeros_a[0]), count, key);
+   s_b_decrypt(&map->number_of_ones_a[((offsets >> OFF_NO)&0x1)], sizeof(map->number_of_ones_a[0]), count, key);
+   
+   // revert patterns
+   if ((map->rand_indicators >> OFF_BA)&0x1) {
+      s_b_val_fill((unsigned char*) (&map->base_a[((offsets >> OFF_BA)&0x1)]) + rand_degrees[OFF_BA][0],
+                     rand_degrees[OFF_BA][1] - rand_degrees[OFF_BA][0] + 1, count, 0x00);
+   }
+   if ((map->rand_indicators >> OFF_EN)&0x1) {
+      s_b_val_fill((unsigned char*) (&map->end_a[((offsets >> OFF_EN)&0x1)]) + rand_degrees[OFF_EN][0], 
+                     rand_degrees[OFF_EN][1] - rand_degrees[OFF_EN][0] + 1, count, 0x00);
+   }
+   if ((map->rand_indicators >> OFF_LE)&0x1) {
+      s_b_val_fill((unsigned char*) (&map->length_a[((offsets >> OFF_LE)&0x1)]) + rand_degrees[OFF_LE][0], 
+                     rand_degrees[OFF_LE][1] - rand_degrees[OFF_LE][0] + 1, count, 0x00);
+   }
+   if ((map->rand_indicators >> OFF_NZ)&0x1) {
+      s_b_val_fill((unsigned char*) (&map->number_of_zeros_a[((offsets >> OFF_NZ)&0x1)]) + rand_degrees[OFF_NZ][0], 
+                     rand_degrees[OFF_NZ][1] - rand_degrees[OFF_NZ][0] + 1, count, 0x00);
+   }
+   if ((map->rand_indicators >> OFF_NO)&0x1) {
+      s_b_val_fill((unsigned char*) (&map->number_of_ones_a[((offsets >> OFF_NO)&0x1)]) + rand_degrees[OFF_NO][0], 
+                     rand_degrees[OFF_NO][1] - rand_degrees[OFF_NO][0] + 1, count, 0x00);
+   }
+   
+   // copy from secure data fields
+   map->base      = map->base_a[((offsets >> OFF_BA)&0x1)];
+   map->end       = map->end_a[((offsets >> OFF_EN)&0x1)];
+   map->length    = map->length_a[((offsets >> OFF_LE)&0x1)];
+   map->number_of_zeros = map->number_of_zeros_a[((offsets >> OFF_NZ)&0x1)];
+   map->number_of_ones  = map->number_of_ones_a[((offsets >> OFF_NO)&0x1)];
+   
+   // clear stack
+   key = 0;
+   key2 = 0;
+   offsets = 0;
+   
+   return 0;
+}
+#endif
+
 int bitmap_zero (simple_bitmap* map) {
    map_block* cur;
+   
+   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -113,6 +443,8 @@ int bitmap_zero (simple_bitmap* map) {
    map->number_of_zeros = map->length;
    map->number_of_ones = 0;
    
+   bitmap_meta_encrypt(map);
+   
    return 0;
 }
 
@@ -124,6 +456,8 @@ int bitmap_one (simple_bitmap* map) {
    map_block* cur;
    
    unsigned char count;
+   
+   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -161,6 +495,8 @@ int bitmap_one (simple_bitmap* map) {
    
    map->number_of_zeros = 0;
    map->number_of_ones = map->length;
+   
+   bitmap_meta_encrypt(map);
    
    return 0;
 }
@@ -2239,6 +2575,13 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
 }
 
 int bitmap_show (simple_bitmap* map) {
+   #ifdef SIMPLE_BITMAP_META_DATA_SECURITY
+   uint_least8_t offsets;
+   uint_least8_t rand_indicators;
+   
+   unsigned char count;
+   #endif
+   
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
@@ -2253,6 +2596,71 @@ int bitmap_show (simple_bitmap* map) {
    printf("map->length : %u\n", map->length);
    printf("map->number_of_zeros : %u\n", map->number_of_zeros);
    printf("map->number_of_ones  : %u\n", map->number_of_ones);
+   
+   #ifdef SIMPLE_BITMAP_META_DATA_SECURITY
+   offsets = map->offsets;
+   printf("obj_rand_encrypt_xor_meta  : %x\n", map->obj_rand_encrypt_xor_meta);
+   printf("obj_rand_encrypt_add_meta  : %x\n", map->obj_rand_encrypt_add_meta);
+   printf("obj_rand_encrypt_xor_meta2 : %x\n", map->obj_rand_encrypt_xor_meta2);
+   printf("obj_rand_encrypt_add_meta2 : %x\n", map->obj_rand_encrypt_add_meta2);
+   printf("* - actually used\n");
+   printf("offsets : %x\n", offsets);
+   if (!((offsets >> OFF_BA)&0x1)) {
+      printf("map->base[0]* : %p\n", map->base_a[0]);
+      printf("map->base[1]  : %p\n", map->base_a[1]);
+   }
+   else {
+      printf("map->base[0]  : %p\n", map->base_a[0]);
+      printf("map->base[1]* : %p\n", map->base_a[1]);
+   }
+   if (!((offsets >> OFF_EN)&0x1)) {
+      printf("map->end[0]*  : %p\n", map->end_a[0]);
+      printf("map->end[1]   : %p\n", map->end_a[1]);
+   }
+   else {
+      printf("map->end[0]   : %p\n", map->end_a[0]);
+      printf("map->end[1]*  : %p\n", map->end_a[1]);
+   }
+   if (!((offsets >> OFF_LE)&0x1)) {
+      printf("map->length[0]* : %u\n", map->length_a[0]);
+      printf("map->length[1]  : %u\n", map->length_a[1]);
+   }
+   else {
+      printf("map->length[0]  : %u\n", map->length_a[0]);
+      printf("map->length[1]* : %u\n", map->length_a[1]);
+   }
+   if (!((offsets >> OFF_NZ)&0x1)) {
+      printf("map->number_of_zeros[0]* : %u\n", map->number_of_zeros_a[0]);
+      printf("map->number_of_zeros[1]  : %u\n", map->number_of_zeros_a[1]);
+   }
+   else {
+      printf("map->number_of_zeros[0]  : %u\n", map->number_of_zeros_a[0]);
+      printf("map->number_of_zeros[1]* : %u\n", map->number_of_zeros_a[1]);
+   }
+   if (!((offsets >> OFF_NO)&0x1)) {
+      printf("map->number_of_ones[0]*  : %u\n", map->number_of_ones_a[0]);
+      printf("map->number_of_ones[1]   : %u\n", map->number_of_ones_a[1]);
+   }
+   else {
+      printf("map->number_of_ones[0]   : %u\n", map->number_of_ones_a[0]);
+      printf("map->number_of_ones[1]*  : %u\n", map->number_of_ones_a[1]);
+   }
+   
+   rand_indicators = map->rand_indicators;
+   
+   printf("map->rand_indicators : %x\n", rand_indicators);
+   printf("map->rand_degrees :\n");
+   for (count = 0; count < 5; count++) {
+      printf("   [%d][%d] : %d, ", count, 0, map->rand_degrees[count][0]);
+      printf("   [%d][%d] : %d\n", count, 1, map->rand_degrees[count][1]);
+   }
+   
+   /*printf("map->rand_revert_to : ");
+   for (count = 0; count < sizeof(map->rand_revert_to)-1; count++) {
+      printf("%x, ", map->rand_revert_to[count]);
+   }
+   printf("%x\n", map->rand_revert_to[count]);*/
+   #endif
    
    printf("####################\n");
    
