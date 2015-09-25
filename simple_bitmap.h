@@ -193,8 +193,8 @@ int bitmap_and    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_
 int bitmap_or     (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size);
 int bitmap_xor    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size);
 
-int bitmap_read   (simple_bitmap* map, uint_fast32_t index, map_block* result);
-int bitmap_write  (simple_bitmap* map, uint_fast32_t index, map_block input_value);
+int bitmap_read   (simple_bitmap* map, uint_fast32_t index, map_block* result,     unsigned char no_auto_crypt);
+int bitmap_write  (simple_bitmap* map, uint_fast32_t index, map_block input_value, unsigned char no_auto_crypt);
 
 int bitmap_first_one_bit_index   (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
 int bitmap_first_zero_bit_index  (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
