@@ -135,8 +135,6 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast3
    
    map->base = base;
    
-   bitmap_show(map);
-   
    bitmap_meta_encrypt(map);
    
    if (default_value > 1) {
