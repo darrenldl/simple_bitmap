@@ -81,7 +81,7 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast3
 }
 
 int bitmap_zero (simple_bitmap* map) {
-   map_block* cur;
+   volatile map_block* cur;
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -117,7 +117,7 @@ int bitmap_zero (simple_bitmap* map) {
 int bitmap_one (simple_bitmap* map) {
    map_block mask;
    
-   map_block* cur;
+   volatile map_block* cur;
    
    unsigned char count;
    
