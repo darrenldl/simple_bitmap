@@ -108,8 +108,7 @@ As lint no longer exists for arrN, the partitions will be shifted properly after
 Note that for the above procedure, there was no strict requirement about indexing, but the indexing
 did represent the direction. The only requirement is that the indexing must be reversed everytime
 we move to smaller array to handle the lint in current array(refer to point (A)).
-This is to maintain the loop invariant listed above, that is,
-starting from the 0th elements, the elements following it are correctly placed until n-1 th one.
+This is to maintain the loop invariant listed above.
 
 The reversing of the index can be undeerstood in this way:
 We are always shifting the elements in array forward by one, j+1 th element <- j th element, etc.
