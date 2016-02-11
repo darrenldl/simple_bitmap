@@ -539,8 +539,6 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
    
    //map_block* temp_end;
    
-   bitmap_meta_decrypt(map);
-   
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
@@ -805,8 +803,6 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
    
    bitmap_count_zeros_and_ones(map);
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -818,8 +814,6 @@ int bitmap_not (simple_bitmap* map) {
    map_block mask;
    
    bit_index temp;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -866,8 +860,6 @@ int bitmap_not (simple_bitmap* map) {
    map->number_of_ones = map->number_of_zeros;
    map->number_of_zeros = temp;
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -881,10 +873,6 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
    //map_block mask;
    
    //bit_index temp;
-   
-   bitmap_meta_decrypt(map1);
-   bitmap_meta_decrypt(map2);
-   bitmap_meta_decrypt(ret_map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -978,10 +966,6 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
    
    bitmap_count_zeros_and_ones(ret_map);
    
-   bitmap_meta_encrypt(map1);
-   bitmap_meta_encrypt(map2);
-   bitmap_meta_encrypt(ret_map);
-   
    return 0;
 }
 
@@ -995,10 +979,6 @@ int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map,
    //map_block mask;
    
    //bit_index temp;
-   
-   bitmap_meta_decrypt(map1);
-   bitmap_meta_decrypt(map2);
-   bitmap_meta_decrypt(ret_map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1092,10 +1072,6 @@ int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map,
    
    bitmap_count_zeros_and_ones(ret_map);
    
-   bitmap_meta_encrypt(map1);
-   bitmap_meta_encrypt(map2);
-   bitmap_meta_encrypt(ret_map);
-   
    return 0;
 }
 
@@ -1109,10 +1085,6 @@ int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
    //map_block mask;
    
    //bit_index temp;
-   
-   bitmap_meta_decrypt(map1);
-   bitmap_meta_decrypt(map2);
-   bitmap_meta_decrypt(ret_map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1206,15 +1178,16 @@ int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
    
    bitmap_count_zeros_and_ones(ret_map);
    
-   bitmap_meta_encrypt(map1);
-   bitmap_meta_encrypt(map2);
-   bitmap_meta_encrypt(ret_map);
-   
    return 0;
 }
 
+<<<<<<< HEAD
 int bitmap_read (simple_bitmap* map, bit_index index, map_block* result, unsigned char no_auto_crypt) {
    //map_block* cur;
+=======
+int bitmap_read (simple_bitmap* map, bit_index index, map_block* result) {
+   map_block* cur;
+>>>>>>> parent of 1321c51... Added crypt procedures to all functions
    
    uint_fast32_t block_index;
    unsigned char bit_indx;
@@ -1222,10 +1195,6 @@ int bitmap_read (simple_bitmap* map, bit_index index, map_block* result, unsigne
    map_block mask;
    
    map_block buf;
-   
-   if (!no_auto_crypt) {
-      bitmap_meta_decrypt(map);
-   }
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1271,15 +1240,16 @@ int bitmap_read (simple_bitmap* map, bit_index index, map_block* result, unsigne
    
    *result = buf;
    
-   if (!no_auto_crypt) {
-      bitmap_meta_encrypt(map);
-   }
-   
    return 0;
 }
 
+<<<<<<< HEAD
 int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value, unsigned char no_auto_crypt) {
    //map_block* cur;
+=======
+int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value) {
+   map_block* cur;
+>>>>>>> parent of 1321c51... Added crypt procedures to all functions
    
    uint_fast32_t block_index;
    unsigned char bit_indx;
@@ -1290,9 +1260,6 @@ int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value, un
    
    map_block original;
    
-   if (!no_auto_crypt) {
-      bitmap_meta_decrypt(map);
-   }
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
    if (map == NULL) {
@@ -1348,10 +1315,6 @@ int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value, un
       map->number_of_ones     ++;
    }
    
-   if (!no_auto_crypt) {
-      bitmap_meta_encrypt(map);
-   }
-
    return 0;
 }
 
@@ -1363,8 +1326,6 @@ int bitmap_count_zeros_and_ones (simple_bitmap* map) {
    map_block* cur;
    
    unsigned char count;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1436,8 +1397,6 @@ int bitmap_count_zeros_and_ones (simple_bitmap* map) {
    }
    *cur &= mask;
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -1449,8 +1408,6 @@ int bitmap_first_one_bit_index (simple_bitmap* map, bit_index* result, bit_index
    map_block* cur;
    
    uint_fast8_t count = 0;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1528,8 +1485,6 @@ int bitmap_first_one_bit_index (simple_bitmap* map, bit_index* result, bit_index
       return SEARCH_FAIL;
    }
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -1541,8 +1496,6 @@ int bitmap_first_zero_bit_index (simple_bitmap* map, bit_index* result, bit_inde
    map_block* cur;
    
    uint_fast8_t count = 0;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1616,8 +1569,6 @@ int bitmap_first_zero_bit_index (simple_bitmap* map, bit_index* result, bit_inde
       return SEARCH_FAIL;
    }
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -1632,8 +1583,6 @@ int bitmap_first_one_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp,
   
    bit_index zero_count;
    bit_index one_count;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1742,8 +1691,6 @@ int bitmap_first_one_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp,
       zero_count = 0;
    }
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -1758,8 +1705,6 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
   
    bit_index zero_count;
    bit_index one_count;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1868,8 +1813,6 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
       one_count = 0;
    }
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -1881,8 +1824,6 @@ int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_
    map_block* cur;
    
    uint_fast8_t count = 0;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1963,8 +1904,6 @@ int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_
       return 0;
    }
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -1976,8 +1915,6 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
    map_block* cur;
    
    uint_fast8_t count = 0;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -2054,8 +1991,6 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
       return 0;
    }
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -2072,8 +2007,6 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
    bit_index one_count;
    
    bit_index end;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -2185,8 +2118,6 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
    // set start
    ret_grp->start = end - ret_grp->length + 1;
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -2203,8 +2134,6 @@ int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* re
    bit_index one_count;
    
    bit_index end;
-   
-   bitmap_meta_decrypt(map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -2316,8 +2245,6 @@ int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* re
    // set start
    ret_grp->start = end - ret_grp->length + 1;
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -2329,9 +2256,6 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
    map_block mask;
    
    unsigned char count;
-   
-   bitmap_meta_decrypt(src_map);
-   bitmap_meta_decrypt(dst_map);
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -2452,9 +2376,6 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
    
    bitmap_count_zeros_and_ones(dst_map);
    
-   bitmap_meta_encrypt(src_map);
-   bitmap_meta_encrypt(dst_map);
-   
    return 0;
 }
 
@@ -2480,8 +2401,6 @@ int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits,
    bit_index old_length;
    
    unsigned char count;
-   
-   bitmap_meta_decrypt(map);
    
    //input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -2567,8 +2486,6 @@ int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits,
    
    bitmap_count_zeros_and_ones(map);
    
-   bitmap_meta_encrypt(map);
-   
    return 0;
 }
 
@@ -2583,8 +2500,6 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
    //bit_index old_length;
    
    unsigned char count;
-   
-   bitmap_meta_decrypt(map);
    
    //input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -2662,8 +2577,6 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
    }
    
    bitmap_count_zeros_and_ones(map);
-   
-   bitmap_meta_encrypt(map);
    
    return 0;
 }
