@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.09
+ * Version : 0.10
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -40,8 +40,6 @@
 
 //#define SIMPLE_BITMAP_SKIP_CHECK
 
-//#define SIMPLE_BITMAP_META_DATA_SECURITY
-
 #ifndef SIMPLE_BITMAP_SILENT
    #include <stdio.h>
 #endif
@@ -52,22 +50,12 @@
 
 #include <limits.h>
 
-#ifdef SIMPLE_BITMAP_META_DATA_SECURITY
-   #include "rand.h"
-   #include <time.h>
-   #include <string.h>
-   #include <pthread.h>
-#else
-   #define bitmap_meta_encrypt(...)
-   #define bitmap_meta_decrypt(...)
-#endif
-
 #include "simple_something_error.h"
 
 #define get_bitmap_map_block_number(size_in_bits)   ((size_in_bits) / MAP_BLOCK_BIT + (((size_in_bits) % MAP_BLOCK_BIT) == 0 ? 0 : 1))
 #define get_bitmap_map_block_index(bit_index)       ((bit_index) / (MAP_BLOCK_BIT))
 #define get_bitmap_map_block_bit_index(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
-#define get_bitmap_excess_bits(bit_index)           ((bit_index) % (MAP_BLOCK_BIT))
+#define get_bitmap_excess_bits(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
 
 #define MAP_BLOCK_BIT   CHAR_BIT
 
@@ -83,34 +71,6 @@ struct simple_bitmap {
    
    bit_index number_of_zeros;
    bit_index number_of_ones;
-   #ifdef SIMPLE_BITMAP_META_DATA_SECURITY
-   uint32_t obj_rand_encrypt_xor_meta;
-   uint32_t obj_rand_encrypt_add_meta;
-   uint32_t obj_rand_encrypt_xor_meta2;
-   uint32_t obj_rand_encrypt_add_meta2;
-   
-   #define CRT_OF 1
-   uint_least8_t offsets;     // crypt order #1
-   
-   #define OFF_BA 0
-   map_block* base_a[2];        // #2,   offset order #0
-   #define OFF_EN 1
-   map_block* end_a[2];         // #3,   #1
-   #define OFF_LE 2
-   bit_index length_a[2];       // #4,   #2
-   
-   uint32_t obj_cookie_meta;  // #5
-   
-   #define OFF_NZ 3
-   bit_index number_of_zeros_a[2]; // #6,   #3
-   #define OFF_NO 4
-   bit_index number_of_ones_a[2];  // #7,   #4
-   
-   uint_least8_t rand_indicators;  // # 8, N/A
-   uint_least8_t rand_degrees[5][2];
-   //unsigned char rand_revert_to[5];
-   
-   #endif
 };
 
 struct bitmap_cont_group {
@@ -119,26 +79,9 @@ struct bitmap_cont_group {
    bit_index length;
 };
 
-/* Scheme:
- *    randomise all keys, if unrandomised
- *    (obj_rand_encrypt_xor_meta + rand_encrypt_add_meta)
- *    XOR rand_encrypt_xor_meta + (obj_rand_encrypt_add_meta XOR rand_encrypt_xor_meta)
- *       is used to xor encrypt/decrypt the data
- */
-#ifdef SIMPLE_BITMAP_META_DATA_SECURITY
-uint_fast32_t  rand_encrypt_xor_meta;
-uint_fast32_t  rand_encrypt_add_meta;
-uint_fast32_t  rand_encrypt_xor_meta2;
-uint_fast32_t  rand_encrypt_add_meta2;
-uint_fast32_t  rand_cookie_correct_meta;
-randctx s_b_rand_ctx;
-unsigned char rand_things_init;
-pthread_mutex_t rand_things_init_lock;
-#endif
-
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif   
 
 /* default value :
  *    0 - overwrite space with 0s
@@ -146,13 +89,6 @@ extern "C" {
  *   >1 - leave the space as it is
  */
 int bitmap_init   (simple_bitmap* map, map_block* base, map_block* end, uint_fast32_t size_in_bits, map_block default_value);
-
-#ifdef SIMPLE_BITMAP_META_DATA_SECURITY
-int bitmap_meta_encrypt (simple_bitmap* map);
-int bitmap_meta_decrypt (simple_bitmap* map);
-#endif
-
-int bitmap_data_check   (simple_bitmap* map);   // potentially expensive as it goes through entire bitmap
 
 int bitmap_zero   (simple_bitmap* map);
 int bitmap_one    (simple_bitmap* map);
