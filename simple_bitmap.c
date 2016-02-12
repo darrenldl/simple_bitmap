@@ -2015,7 +2015,7 @@ int bitmap_meta_copy (simple_bitmap* src_map, simple_bitmap* dst_map) {
 // memory management is not handled
 // this function only handles meta data and initialise uninitialised map blocks
 int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits, map_block default_value) {
-   map_block* cur;
+   volatile map_block* cur;
    
    map_block mask;
    
