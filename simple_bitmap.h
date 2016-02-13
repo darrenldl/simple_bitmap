@@ -129,11 +129,11 @@ int bitmap_and    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_
 int bitmap_or     (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size);
 int bitmap_xor    (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map, unsigned char enforce_same_size);
 
-int bitmap_read   (simple_bitmap* map, uint_fast32_t index, map_block* result);
-int bitmap_write  (simple_bitmap* map, uint_fast32_t index, map_block input_value);
+int bitmap_read   (simple_bitmap* map, bit_index index, map_block* result);
+int bitmap_write  (simple_bitmap* map, bit_index index, map_block input_value);
 
-int bitmap_first_one_bit_index   (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
-int bitmap_first_zero_bit_index  (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
+int bitmap_first_one_bit_index   (simple_bitmap* map, bit_index* result, bit_index skip_to_bit);
+int bitmap_first_zero_bit_index  (simple_bitmap* map, bit_index* result, bit_index skip_to_bit);
 
 int bitmap_first_one_cont_group     (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
 int bitmap_first_zero_cont_group    (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
@@ -144,8 +144,8 @@ int bitmap_first_zero_cont_group    (simple_bitmap* map, bitmap_cont_group* ret_
  *    for continuous group searching functions,
  *    the indexing and direction follow as above ones(from left to right)
  */
-int bitmap_first_one_bit_index_back   (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
-int bitmap_first_zero_bit_index_back  (simple_bitmap* map, uint_fast32_t* result, bit_index skip_to_bit);
+int bitmap_first_one_bit_index_back   (simple_bitmap* map, bit_index* result, bit_index skip_to_bit);
+int bitmap_first_zero_bit_index_back  (simple_bitmap* map, bit_index* result, bit_index skip_to_bit);
 
 int bitmap_first_one_cont_group_back     (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
 int bitmap_first_zero_cont_group_back    (simple_bitmap* map, bitmap_cont_group* ret_grp, bit_index skip_to_bit);
