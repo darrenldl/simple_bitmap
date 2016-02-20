@@ -598,7 +598,7 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
    }
    
    if (enforce_same_size) {
-      if (!(map1->length == map2->length == ret_map->length)) {
+      if (!(map1->length == map2->length && map1->length == ret_map->length)) {
          printf("bitmap_and : map1 and map2 have different sizes\n");
          return WRONG_INPUT;
       }
@@ -698,7 +698,7 @@ int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map,
    }
    
    if (enforce_same_size) {
-      if (!(map1->length == map2->length == ret_map->length)) {
+      if (!(map1->length == map2->length && map1->length == ret_map->length)) {
          printf("bitmap_or : map1 and map2 have different sizes\n");
          return WRONG_INPUT;
       }
@@ -798,7 +798,7 @@ int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
    }
    
    if (enforce_same_size) {
-      if (!(map1->length == map2->length == ret_map->length)) {
+      if (!(map1->length == map2->length && map1->length == ret_map->length)) {
          printf("bitmap_xor : map1 and map2 have different sizes\n");
          return WRONG_INPUT;
       }
@@ -2120,8 +2120,6 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
    
    map_block* old_end;
    
-   bit_index old_length;
-   
    unsigned char count;
    
    //input check
@@ -2168,7 +2166,6 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
       }
       #endif
       old_end = map->end;
-      old_length = map->length;
       map->end = map->base + get_bitmap_map_block_index(size_in_bits-1);
       map->length = size_in_bits;
    }
@@ -2184,7 +2181,6 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bit
       }
       #endif
       old_end = map->end;
-      old_length = map->length;
       map->end = end;
       map->length = (end - map->base + 1) * MAP_BLOCK_BIT;
    }
