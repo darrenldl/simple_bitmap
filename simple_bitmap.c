@@ -449,8 +449,8 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
             *(map->end) |= temp;
          }
          else {
-            *(map->end-1) |= temp >> MAP_BLOCK_BIT - (bits_to_shift - get_bitmap_excess_bits(map->length));
-            *(map->end) |= temp << bits_to_shift - get_bitmap_excess_bits(map->length);
+            *(map->end-1) |= temp >> (MAP_BLOCK_BIT - (bits_to_shift - get_bitmap_excess_bits(map->length)));
+            *(map->end) |= temp << (bits_to_shift - get_bitmap_excess_bits(map->length));
          }
       }
    }
