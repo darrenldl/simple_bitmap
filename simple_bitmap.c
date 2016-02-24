@@ -42,7 +42,7 @@
 #define s_b_min(a, b) ((a) < (b) ? (a) : (b))
 #define s_b_max(a, b) ((a) > (b) ? (a) : (b))
 
-int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, uint_fast32_t size_in_bits, map_block default_value) {
+int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, bit_index size_in_bits, map_block default_value) {
    map->base = base;
    
    // input check
@@ -161,7 +161,7 @@ int bitmap_one (simple_bitmap* map) {
    return 0;
 }
 
-static int map_blocks_ferris_wheel_flip (map_block* start, map_block* end, uint_fast32_t count) {
+static int map_blocks_ferris_wheel_flip (map_block* start, map_block* end, bit_index count) {
    map_block* start1 = start;
    map_block* start2 = end - count + 1;
    map_block temp;
@@ -181,13 +181,13 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
    
    map_block temp;
    
-   uint_fast16_t blocks_to_shift;
+   bit_index blocks_to_shift;
    
    unsigned char bits_to_shift;
    
    char shrink_direction;
    
-   uint_fast32_t move_count;
+   bit_index move_count;
    
    map_block* start1;
    
@@ -901,7 +901,6 @@ int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value) {
       return CORRUPTED_DATA;
    }
    if (map->base + get_bitmap_map_block_index(map->length-1) != map->end) {
-      printf("t %d, %d\n", map->end - map->end, map->length-1);
       printf("bitmap_write : length is inconsistent with base and end\n");
       return CORRUPTED_DATA;
    }
@@ -1030,7 +1029,7 @@ int bitmap_first_one_bit_index (simple_bitmap* map, bit_index* result, bit_index
    
    map_block* cur;
    
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1118,7 +1117,7 @@ int bitmap_first_zero_bit_index (simple_bitmap* map, bit_index* result, bit_inde
    
    map_block* cur;
    
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1202,7 +1201,7 @@ int bitmap_first_one_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp,
    
    map_block* cur;
    
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
   
    bit_index zero_count;
    bit_index one_count;
@@ -1324,7 +1323,7 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
   
    map_block* cur;
   
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
   
    bit_index zero_count;
    bit_index one_count;
@@ -1446,7 +1445,7 @@ int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_
    
    map_block* cur;
    
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1537,7 +1536,7 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
    
    map_block* cur;
    
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
    
    // input check
    #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -1624,7 +1623,7 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
    
    map_block* cur;
    
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
   
    bit_index zero_count;
    bit_index one_count;
@@ -1751,7 +1750,7 @@ int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* re
   
    map_block* cur;
   
-   uint_fast8_t count = 0;
+   uint_least16_t count = 0;
   
    bit_index zero_count;
    bit_index one_count;
@@ -2014,7 +2013,7 @@ int bitmap_meta_copy (simple_bitmap* src_map, simple_bitmap* dst_map) {
 
 // memory management is not handled
 // this function only handles meta data and initialise uninitialised map blocks
-int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits, map_block default_value) {
+int bitmap_grow (simple_bitmap* map, map_block* end, bit_index size_in_bits, map_block default_value) {
    volatile map_block* cur;
    
    map_block mask;
@@ -2113,7 +2112,7 @@ int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits,
 }
 
 // cuts the bitmap and modifies the meta data
-int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits) {
+int bitmap_shrink (simple_bitmap* map, map_block* end, bit_index size_in_bits) {
    map_block* cur;
    
    map_block mask;
@@ -2212,9 +2211,9 @@ int bitmap_show (simple_bitmap* map) {
    
    printf("map->base : %p\n", map->base);
    printf("map->end  : %p\n", map->end);
-   printf("map->length : %u\n", map->length);
-   printf("map->number_of_zeros : %u\n", map->number_of_zeros);
-   printf("map->number_of_ones  : %u\n", map->number_of_ones);
+   printf("map->length : %"PRIu64"\n", map->length);
+   printf("map->number_of_zeros : %"PRIu64"\n", map->number_of_zeros);
+   printf("map->number_of_ones  : %"PRIu64"\n", map->number_of_ones);
    
    printf("####################\n");
    
@@ -2232,8 +2231,8 @@ int bitmap_cont_group_show (bitmap_cont_group* grp) {
    printf("####################\n");
    
    printf("grp->bit_type : %x\n", grp->bit_type);
-   printf("grp->start  : %u\n", grp->start);
-   printf("grp->length : %u\n", grp->length);
+   printf("grp->start  : %"PRIu64"\n", grp->start);
+   printf("grp->length : %"PRIu64"\n", grp->length);
    
    printf("####################\n");
    

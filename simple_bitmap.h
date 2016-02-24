@@ -50,6 +50,8 @@
 
 #include <limits.h>
 
+#include <inttypes.h>
+
 #include "simple_something_error.h"
 
 #define get_bitmap_map_block_number(size_in_bits)   ((size_in_bits) / MAP_BLOCK_BIT + (((size_in_bits) % MAP_BLOCK_BIT) == 0 ? 0 : 1))
@@ -61,7 +63,7 @@
 
 typedef unsigned char map_block;    // map block must be unsigned
 typedef struct simple_bitmap simple_bitmap;
-typedef uint_fast32_t bit_index;
+typedef uint64_t bit_index;
 typedef struct bitmap_cont_group bitmap_cont_group;
 
 struct simple_bitmap {
@@ -88,7 +90,7 @@ extern "C" {
  *    1 - overwrite space with 1s
  *   >1 - leave the space as it is
  */
-int bitmap_init   (simple_bitmap* map, map_block* base, map_block* end, uint_fast32_t size_in_bits, map_block default_value);
+int bitmap_init   (simple_bitmap* map, map_block* base, map_block* end, bit_index size_in_bits, map_block default_value);
 
 int bitmap_zero   (simple_bitmap* map);
 int bitmap_one    (simple_bitmap* map);
@@ -165,8 +167,8 @@ int bitmap_meta_copy (simple_bitmap* src_map, simple_bitmap* dst_map);
  *    1 - overwrite space with 1s
  *   >1 - leave the space as it is
  */
-int bitmap_grow (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits, map_block default_value);
-int bitmap_shrink (simple_bitmap* map, map_block* end, uint_fast32_t size_in_bits);
+int bitmap_grow (simple_bitmap* map, map_block* end, bit_index size_in_bits, map_block default_value);
+int bitmap_shrink (simple_bitmap* map, map_block* end, bit_index size_in_bits);
 
 int bitmap_show (simple_bitmap* map);
 int bitmap_cont_group_show (bitmap_cont_group* grp);
