@@ -61,7 +61,7 @@
 
 #define MAP_BLOCK_BIT   CHAR_BIT
 
-typedef unsigned char map_block;    // map block must be unsigned
+typedef unsigned char map_block;    // map block MUST be unsigned
 typedef struct simple_bitmap simple_bitmap;
 typedef uint64_t bit_index;
 typedef struct bitmap_cont_group bitmap_cont_group;
