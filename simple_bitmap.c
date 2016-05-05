@@ -522,6 +522,8 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
     map_block* cur2;
     map_block* cur_ret;
 
+    bit_index i, min_len;
+
     // input check
 #ifndef SIMPLE_BITMAP_SKIP_CHECK
     if (map1 == NULL) {
@@ -605,9 +607,13 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
     }
 #endif
 
+    // get mininum of ends of all three maps
+    min_len = s_b_min(map1->end - map1->base + 1, map2->end - map2->base + 1);
+    min_len = s_b_min(min_len, ret_map->end - ret_map->base + 1);
+
     // do AND bitwise operation
-    for (   cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
-            cur1 <= map1->end && cur2 <= map2->end && cur_ret <= ret_map->end;
+    for (   i = 0, cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
+            i <= min_len;
             cur1++, cur2++, cur_ret++
         )
     {
@@ -623,6 +629,8 @@ int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map,
     map_block* cur1;
     map_block* cur2;
     map_block* cur_ret;
+
+    bit_index i, min_len;
 
     // input check
 #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -707,9 +715,13 @@ int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map,
     }
 #endif
 
+    // get mininum of ends of all three maps
+    min_len = s_b_min(map1->end - map1->base + 1, map2->end - map2->base + 1);
+    min_len = s_b_min(min_len, ret_map->end - ret_map->base + 1);
+
     // do OR bitwise operation
-    for (   cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
-            cur1 <= map1->end && cur2 <= map2->end && cur_ret <= ret_map->end;
+    for (   i = 0, cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
+            i <= min_len;
             cur1++, cur2++, cur_ret++
         )
     {
@@ -725,6 +737,8 @@ int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
     map_block* cur1;
     map_block* cur2;
     map_block* cur_ret;
+
+    bit_index i, min_len;
 
     // input check
 #ifndef SIMPLE_BITMAP_SKIP_CHECK
@@ -809,9 +823,13 @@ int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
     }
 #endif
 
+    // get mininum of ends of all three maps
+    min_len = s_b_min(map1->end - map1->base + 1, map2->end - map2->base + 1);
+    min_len = s_b_min(min_len, ret_map->end - ret_map->base + 1);
+
     // do XOR bitwise operation
-    for (   cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
-            cur1 <= map1->end && cur2 <= map2->end && cur_ret <= ret_map->end;
+    for (   i = 0, cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
+            i <= min_len;
             cur1++, cur2++, cur_ret++
         )
     {
