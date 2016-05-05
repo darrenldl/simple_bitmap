@@ -1,7 +1,7 @@
 /* simple bitmap library
  * Author : darrenldl <dldldev@yahoo.com>
  * 
- * Version : 0.10
+ * Version : 0.11
  * 
  * Note:
  *    simple bitmap is NOT thread safe
@@ -67,18 +67,18 @@ typedef uint64_t bit_index;
 typedef struct bitmap_cont_group bitmap_cont_group;
 
 struct simple_bitmap {
-   map_block* base;
-   map_block* end;
-   bit_index length;
-   
-   bit_index number_of_zeros;
-   bit_index number_of_ones;
+    map_block* base;
+    map_block* end;
+    bit_index length;
+
+    bit_index number_of_zeros;
+    bit_index number_of_ones;
 };
 
 struct bitmap_cont_group {
-   map_block bit_type;
-   bit_index start;
-   bit_index length;
+    map_block bit_type;
+    bit_index start;
+    bit_index length;
 };
 
 #ifdef __cplusplus
