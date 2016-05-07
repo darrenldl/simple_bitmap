@@ -613,8 +613,8 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
 
     // do AND bitwise operation
     for (   i = 0, cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
-            i <= min_len;
-            cur1++, cur2++, cur_ret++
+            i < min_len;
+            i++, cur1++, cur2++, cur_ret++
         )
     {
         *cur_ret = *cur1 & *cur2;
@@ -721,8 +721,8 @@ int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map,
 
     // do OR bitwise operation
     for (   i = 0, cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
-            i <= min_len;
-            cur1++, cur2++, cur_ret++
+            i < min_len;
+            i++, cur1++, cur2++, cur_ret++
         )
     {
         *cur_ret = *cur1 | *cur2;
@@ -829,8 +829,8 @@ int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
 
     // do XOR bitwise operation
     for (   i = 0, cur1 = map1->base, cur2 = map2->base, cur_ret = ret_map->base;
-            i <= min_len;
-            cur1++, cur2++, cur_ret++
+            i < min_len;
+            i++, cur1++, cur2++, cur_ret++
         )
     {
         *cur_ret = *cur1 ^ *cur2;
