@@ -2038,7 +2038,7 @@ int bitmap_meta_copy (simple_bitmap* src_map, simple_bitmap* dst_map) {
 
 // memory management is not handled
 // this function only handles meta data and initialise uninitialised map blocks
-int bitmap_grow (simple_bitmap* map, map_block* end, bit_index size_in_bits, map_block default_value) {
+int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index size_in_bits, map_block default_value) {
     volatile map_block* cur;
 
     map_block mask;
@@ -2076,6 +2076,10 @@ int bitmap_grow (simple_bitmap* map, map_block* end, bit_index size_in_bits, map
         return CORRUPTED_DATA;
     }
 #endif
+
+    if (base != NULL) {
+        map->base = base;
+    }
 
     if (end == NULL) {
         if (size_in_bits == 0) {

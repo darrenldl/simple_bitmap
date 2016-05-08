@@ -167,7 +167,7 @@ int bitmap_meta_copy (simple_bitmap* src_map, simple_bitmap* dst_map);
  *    1 - overwrite space with 1s
  *   >1 - leave the space as it is
  */
-int bitmap_grow (simple_bitmap* map, map_block* end, bit_index size_in_bits, map_block default_value);
+int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index size_in_bits, map_block default_value);
 int bitmap_shrink (simple_bitmap* map, map_block* end, bit_index size_in_bits);
 
 int bitmap_show (simple_bitmap* map);
