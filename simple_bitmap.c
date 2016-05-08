@@ -2102,18 +2102,18 @@ int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index 
         map->length = size_in_bits;
     }
     else {
-        if (end < map->end) {
-            printf("bitmap_grow : request end is lower than old end\n");
-            return WRONG_INPUT;
-        }
-        if (end == map->end) {
-            printf("bitmap_grow : request end is same as old end\n");
-            return WRONG_INPUT;
-        }
         old_length = map->length;
         // the position of old end in memory may be moved by memory operations
         // but position wise in bitmap, it is still the "old" end
         old_end = map->base + get_bitmap_map_block_index(old_length-1);
+        if (end < old_end) {
+            printf("bitmap_grow : request end is lower than old end\n");
+            return WRONG_INPUT;
+        }
+        if (end == old_end) {
+            printf("bitmap_grow : request end is same as old end\n");
+            return WRONG_INPUT;
+        }
         map->end = end;
         map->length = (map->end - map->base + 1) * MAP_BLOCK_BIT;
     }
