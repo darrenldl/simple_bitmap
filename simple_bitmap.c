@@ -2077,8 +2077,16 @@ int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index 
     }
 #endif
 
-    if (base != NULL) {
+    old_length = map->length;
+
+    if (base) {     // changed memory location
         map->base = base;
+        // the position of old end in memory may be moved by memory operations
+        // but position wise in bitmap, it is still the "old" end
+        old_end = base + get_bitmap_map_block_index(old_length-1);
+    }
+    else {          // remain in same spot
+        old_end = map->end;
     }
 
     if (end == NULL) {
@@ -2086,26 +2094,18 @@ int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index 
             printf("bitmap_grow : end is NULL but size is 0 as well\n");
             return WRONG_INPUT;
         }
-        if (size_in_bits < map->length) {
+        if (size_in_bits < old_length) {
             printf("bitmap_grow : request length is smaller than old length\n");
             return WRONG_INPUT;
         }
-        if (size_in_bits == map->length) {
+        if (size_in_bits == old_length) {
             printf("bitmap_grow : request length is same as old length\n");
             return WRONG_INPUT;
         }
-        old_length = map->length;
-        // the position of old end in memory may be moved by memory operations
-        // but position wise in bitmap, it is still the "old" end
-        old_end = map->base + get_bitmap_map_block_index(old_length-1);
         map->end = map->base + get_bitmap_map_block_index(size_in_bits-1);
         map->length = size_in_bits;
     }
     else {
-        old_length = map->length;
-        // the position of old end in memory may be moved by memory operations
-        // but position wise in bitmap, it is still the "old" end
-        old_end = map->base + get_bitmap_map_block_index(old_length-1);
         if (end < old_end) {
             printf("bitmap_grow : request end is lower than old end\n");
             return WRONG_INPUT;
