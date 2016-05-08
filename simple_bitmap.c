@@ -2094,8 +2094,10 @@ int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index 
             printf("bitmap_grow : request length is same as old length\n");
             return WRONG_INPUT;
         }
-        old_end = map->end;
         old_length = map->length;
+        // the position of old end in memory may be moved by memory operations
+        // but position wise in bitmap, it is still the "old" end
+        old_end = map->base + get_bitmap_map_block_index(old_length-1);
         map->end = map->base + get_bitmap_map_block_index(size_in_bits-1);
         map->length = size_in_bits;
     }
@@ -2108,10 +2110,12 @@ int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index 
             printf("bitmap_grow : request end is same as old end\n");
             return WRONG_INPUT;
         }
-        old_end = map->end;
         old_length = map->length;
+        // the position of old end in memory may be moved by memory operations
+        // but position wise in bitmap, it is still the "old" end
+        old_end = map->base + get_bitmap_map_block_index(old_length-1);
         map->end = end;
-        map->length = (end - map->base + 1) * MAP_BLOCK_BIT;
+        map->length = (map->end - map->base + 1) * MAP_BLOCK_BIT;
     }
 
     // clean off the edge and remaining map blocks
