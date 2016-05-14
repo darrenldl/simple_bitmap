@@ -346,8 +346,11 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
         if (get_bitmap_excess_bits(map->length)) {
             if (direction >= 0) {   // shift to right
                 // handle the remaining unshifted blocks
-                for (cur = map->base+blocks_to_shift-1;
-                        cur > map->base; cur--) {
+                for (   cur = map->base+blocks_to_shift-1;
+                        cur > map->base;
+                        cur--
+                    ) 
+                {
                     temp = *(cur-1) << get_bitmap_excess_bits(map->length);
 
                     *cur >>= MAP_BLOCK_BIT - get_bitmap_excess_bits(map->length);
@@ -367,8 +370,11 @@ int bitmap_shift (simple_bitmap* map, bit_index offset, char direction, map_bloc
                 *(map->end-blocks_to_shift) |= temp;
 
                 // shift remaining blocks to left including the currently last block
-                for (cur = map->end-blocks_to_shift+1;
-                        cur < map->end; cur++) {
+                for (   cur = map->end-blocks_to_shift+1;
+                        cur < map->end;
+                        cur++
+                    )
+                {
                     temp = *(cur+1) >> get_bitmap_excess_bits(map->length);
 
                     *cur <<= MAP_BLOCK_BIT - get_bitmap_excess_bits(map->length);
