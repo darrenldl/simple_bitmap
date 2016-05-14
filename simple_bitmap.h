@@ -69,6 +69,8 @@
  */
 #define MAP_BLOCK_BIT   CHAR_BIT
 
+#define MAP_BLOCK_FORMAT_STR    "%02X""
+
 typedef unsigned char map_block;
 typedef struct simple_bitmap simple_bitmap;
 typedef uint64_t bit_index;

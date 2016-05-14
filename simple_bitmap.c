@@ -70,7 +70,7 @@ int bitmap_init (simple_bitmap* map, map_block* base, map_block* end, bit_index 
     if (default_value > 1) {
         ;     // do nothing
     }
-    else if (default_value & 0x1) {
+    else if (default_value & (map_block) 0x1) {
         return bitmap_one(map);
     }
     else {
@@ -151,7 +151,7 @@ int bitmap_one (simple_bitmap* map) {
     // set the extra bits back to 0
     mask = 0;
     for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
-        mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+        mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
     }
     *cur &= mask;
 
@@ -505,7 +505,7 @@ int bitmap_not (simple_bitmap* map) {
     // clean up the edge
     mask = 0;
     for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
-        mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+        mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
     }
     *(map->end) &= mask;
 
@@ -885,7 +885,7 @@ int bitmap_read (simple_bitmap* map, bit_index index, map_block* result) {
 #endif
     bit_indx = get_bitmap_map_block_bit_index(index);
 
-    mask = 0x1 << ((MAP_BLOCK_BIT - 1) - bit_indx);
+    mask = (map_block) 0x1 << ((MAP_BLOCK_BIT - 1) - bit_indx);
 
     buf = *(map->base + block_index) & mask;
 
@@ -942,9 +942,9 @@ int bitmap_write (simple_bitmap* map, bit_index index, map_block input_value) {
 #endif
     bit_indx = get_bitmap_map_block_bit_index(index);
 
-    mask = 0x1 << ((MAP_BLOCK_BIT - 1) - bit_indx);
+    mask = (map_block) 0x1 << ((MAP_BLOCK_BIT - 1) - bit_indx);
 
-    buf = (input_value & 0x1) << ((MAP_BLOCK_BIT - 1) - bit_indx);
+    buf = (input_value & (map_block) 0x1) << ((MAP_BLOCK_BIT - 1) - bit_indx);
     buf &= mask;
 
     original = *(map->base + block_index) & mask;
@@ -998,7 +998,7 @@ int bitmap_count_zeros_and_ones (simple_bitmap* map) {
 #endif
 
     // setup mask so left most bit is 1
-    mask = 0x1 << (MAP_BLOCK_BIT - 1);
+    mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // reset
     map->number_of_zeros = 0;
@@ -1023,7 +1023,7 @@ int bitmap_count_zeros_and_ones (simple_bitmap* map) {
     buf = *cur;
 
     // setup mask so left most bit is 1
-    mask = 0x1 << (MAP_BLOCK_BIT - 1);
+    mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // count bits in last map_block
     for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
@@ -1039,7 +1039,7 @@ int bitmap_count_zeros_and_ones (simple_bitmap* map) {
     // clean up the edge
     mask = 0;
     for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
-        mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+        mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
     }
     *cur &= mask;
 
@@ -1099,12 +1099,12 @@ int bitmap_first_one_bit_index (simple_bitmap* map, bit_index* result, bit_index
     // mask skipped bits
     mask = 0;
     for (count = 0; count < MAP_BLOCK_BIT - get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= 0x1 << count;
+        mask |= (map_block) 0x1 << count;
     }
     buf = buf & mask;
 
     // setup mask so left most bit is 1
-    mask = 0x1 << (MAP_BLOCK_BIT - 1);
+    mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non zero map_block
     for (; cur <= map->end; cur++) {
@@ -1183,12 +1183,12 @@ int bitmap_first_zero_bit_index (simple_bitmap* map, bit_index* result, bit_inde
     // mask skipped bits
     mask = 0;
     for (count = 0; count < get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+        mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
     }
     buf = buf | mask;
 
     // setup mask so left most bit is 1
-    mask = 0x1 << (MAP_BLOCK_BIT - 1);
+    mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non all one map_block
     for (; cur <= map->end; cur++) {
@@ -1279,12 +1279,12 @@ int bitmap_first_one_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp,
     // mask skipped bits
     mask = 0;
     for (count = 0; count < MAP_BLOCK_BIT - get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= 0x1 << count;
+        mask |= (map_block) 0x1 << count;
     }
     buf = buf & mask;
 
     // setup mask so left most bit is 1
-    mask = 0x1 << (MAP_BLOCK_BIT - 1);
+    mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non zero map block
     for (; cur <= map->end; cur++) {
@@ -1401,12 +1401,12 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
     // mask skipped bits
     mask = 0;
     for (count = 0; count < get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+        mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
     }
     buf = buf | mask;
 
     // setup mask so left most bit is 1
-    mask = 0x1 << (MAP_BLOCK_BIT - 1);
+    mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non all one map block
     for (; cur <= map->end; cur++) {
@@ -1515,12 +1515,12 @@ int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_
     // mask skipped bits
     mask = 0;
     for (count = 0; count <= get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= (0x1 << (MAP_BLOCK_BIT - 1)) >> count;
+        mask |= ((map_block) 0x1 << (MAP_BLOCK_BIT - 1)) >> count;
     }
     buf = buf & mask;
 
     // setup mask so right most bit is 1
-    mask = 0x1;
+    mask = (map_block) 0x1;
 
     // find first non zero map_block
     for (; cur >= map->base; cur--) {
@@ -1602,12 +1602,12 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
     // mask skipped bits
     mask = 0;
     for (count = 0; count < MAP_BLOCK_BIT-1 - get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= 0x1 << count;
+        mask |= (map_block) 0x1 << count;
     }
     buf = buf | mask;
 
     // setup mask so right most bit is 1
-    mask = 0x1;
+    mask = (map_block) 0x1;
 
     // find first non all one map_block
     for (; cur >= map->base; cur--) {
@@ -1703,12 +1703,12 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
     // mask skipped bits
     mask = 0;
     for (count = 0; count <= get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= (0x1 << (MAP_BLOCK_BIT - 1)) >> count;
+        mask |= ((map_block) 0x1 << (MAP_BLOCK_BIT - 1)) >> count;
     }
     buf = buf & mask;
 
     // setup mask so right most bit is 1
-    mask = 0x1;
+    mask = (map_block) 0x1;
 
     // find first non zero map block
     for (; cur >= map->base; cur--) {
@@ -1830,12 +1830,12 @@ int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* re
     // mask skipped bits
     mask = 0;
     for (count = 0; count < MAP_BLOCK_BIT-1 - get_bitmap_map_block_bit_index(skip_to_bit); count++) {
-        mask |= 0x1 << count;
+        mask |= (map_block) 0x1 << count;
     }
     buf = buf | mask;
 
     // setup mask so right most bit is 1
-    mask = 0x1;
+    mask = (map_block) 0x1;
 
     // find first non all one map block
     for (; cur >= map->base; cur--) {
@@ -1957,7 +1957,7 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
 
     if (src_map->length <= dst_map->length) { // no need for truncation at all
         // clean up a bit
-        if (default_value & 0x1) {
+        if (default_value & (map_block) 0x1) {
             bitmap_one(dst_map);
         }
         else {
@@ -1976,9 +1976,9 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
         dst_cur = dst_map->base + (src_map->end - src_map->base);
         mask = 0;
         for (count = 0; count <= get_bitmap_map_block_bit_index(src_map->length-1); count++) {
-            mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+            mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
         }
-        if (default_value & 0x1) {
+        if (default_value & (map_block) 0x1) {
             *dst_cur |= ~mask;
         }
         else {
@@ -1992,7 +1992,7 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
         }
 
         // clean up a bit
-        if (default_value & 0x1) {
+        if (default_value & (map_block) 0x1) {
             bitmap_one(dst_map);
         }
         else {
@@ -2011,9 +2011,9 @@ int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char a
         dst_cur = dst_map->end;
         mask = 0;
         for (count = 0; count <= get_bitmap_map_block_bit_index(dst_map->length-1); count++) {
-            mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+            mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
         }
-        if (default_value & 0x1) {
+        if (default_value & (map_block) 0x1) {
             *dst_cur |= ~mask;
         }
         else {
@@ -2121,12 +2121,12 @@ int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index 
     // clean off the edge and remaining map blocks
     mask = 0;
     for (count = 0; count <= get_bitmap_map_block_bit_index(old_length-1); count++) {
-        mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+        mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
     }
     if (default_value > 1) {
         ;     // do nothing
     }
-    else if (default_value & 0x1) {
+    else if (default_value & (map_block) 0x1) {
         *old_end |= ~mask;
         for (cur = old_end + 1; cur <= map->end; cur++) {
             *cur = (map_block) -1;
@@ -2220,7 +2220,7 @@ int bitmap_shrink (simple_bitmap* map, map_block* end, bit_index size_in_bits) {
     // wipe off the edge and old map blocks
     mask = 0;
     for (count = 0; count <= get_bitmap_map_block_bit_index(map->length-1); count++) {
-        mask |= 0x1 << (MAP_BLOCK_BIT - count - 1);
+        mask |= (map_block) 0x1 << (MAP_BLOCK_BIT - count - 1);
     }
     *(map->end) &= mask;
     for (cur = map->end + 1; cur <= old_end; cur++) {
@@ -2263,7 +2263,7 @@ int bitmap_cont_group_show (bitmap_cont_group* grp) {
 #endif
     printf("####################\n");
 
-    printf("grp->bit_type : %x\n", grp->bit_type);
+    printf("grp->bit_type : %x\n", (grp->bit_type ? 0x1 : 0x0));
     printf("grp->start  : %"PRIu64"\n", grp->start);
     printf("grp->length : %"PRIu64"\n", grp->length);
 
@@ -2310,7 +2310,7 @@ int bitmap_raw_show (simple_bitmap* map) {
 
     count = 0;
     for (cur = map->base; cur <= map->end; cur++) {
-        printf("%02X ", *cur);
+        printf(MAP_BLOCK_FORMAT_STR" ", *cur);
         if (count == 15) {
             count = 0;
             printf("\n");
