@@ -59,10 +59,17 @@
 #define get_bitmap_map_block_bit_index(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
 #define get_bitmap_excess_bits(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
 
-// Note : the bit width specified here SHOULD reflect the actual bit width of the type
+/* Note on customising MAP_BLOCK_BIT and map_block typedef :
+ *      map_block should use an unsigned type to avoid undefined or not well defined behaviour in shifting
+ *
+ *      MAP_BLOCK_BIT should reflect the actual bit width of the type
+ *      which implies the type chosen for map_block CANNOT have padding bits
+ *
+ *      Thus either use unsigned char or exact-width type to ensure no padding exists
+ */
 #define MAP_BLOCK_BIT   CHAR_BIT
 
-typedef unsigned char map_block;    // map block MUST be unsigned to avoid undefined(or not well defined) shifting behaviour
+typedef unsigned char map_block;
 typedef struct simple_bitmap simple_bitmap;
 typedef uint64_t bit_index;
 typedef struct bitmap_cont_group bitmap_cont_group;
