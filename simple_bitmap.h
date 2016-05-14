@@ -59,9 +59,10 @@
 #define get_bitmap_map_block_bit_index(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
 #define get_bitmap_excess_bits(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
 
+// Note : the bit width specified here SHOULD reflect the actual bit width of the type
 #define MAP_BLOCK_BIT   CHAR_BIT
 
-typedef unsigned char map_block;    // map block MUST be unsigned
+typedef unsigned char map_block;    // map block MUST be unsigned to avoid undefined(or not well defined) shifting behaviour
 typedef struct simple_bitmap simple_bitmap;
 typedef uint64_t bit_index;
 typedef struct bitmap_cont_group bitmap_cont_group;
