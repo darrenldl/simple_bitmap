@@ -18,7 +18,7 @@ int main (void) {
    bitmap_cont_group grp;
    
    // test init
-   bitmap_init(&map, raw_map, NULL, 13, 0);
+   bitmap_init(&map, raw_map, NULL, 24, 0);
    
    bitmap_one(&map);
    
@@ -48,14 +48,14 @@ int main (void) {
    printf("\n\n\nSearch test\n");
    bitmap_raw_show(&map);
    
-   if (bitmap_first_zero_bit_index(&map, &ret, 14)) {
+   if (bitmap_first_zero_bit_index_back(&map, &ret, 23)) {
       printf("first zero bit index search failed!\n");
    }
    else {
       printf("first zero bit index search result : %d\n", ret);
    }
    
-   if (bitmap_first_one_bit_index(&map, &ret, 14)) {
+   if (bitmap_first_one_bit_index_back(&map, &ret, 15)) {
       printf("first one bit index search failed!\n");
    }
    else {
@@ -100,7 +100,7 @@ int main (void) {
    bitmap_show(&map);
    bitmap_raw_show(&map);
    
-   bitmap_grow(&map, NULL, 22, 1);
+   bitmap_grow(&map, NULL, NULL, 22, 1);
    
    bitmap_show(&map);
    bitmap_raw_show(&map);
