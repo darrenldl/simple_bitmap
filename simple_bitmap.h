@@ -69,7 +69,7 @@
  */
 #define MAP_BLOCK_BIT   CHAR_BIT
 
-#define MAP_BLOCK_FORMAT_STR    "%02X""
+#define MAP_BLOCK_FORMAT_STR    "%02X"
 
 typedef unsigned char map_block;
 typedef struct simple_bitmap simple_bitmap;
@@ -95,7 +95,10 @@ struct bitmap_cont_group {
 extern "C" {
 #endif   
 
-/* default value :
+/* bitmap_init initialises map blocks according to the default_value provided
+ * the associated behaviours are described below
+ *
+ * default value :
  *    0 - overwrite space with 0s
  *    1 - overwrite space with 1s
  *   >1 - leave the space as it is
@@ -121,7 +124,8 @@ int bitmap_one    (simple_bitmap* map);
  * 
  *    If wrap around is not enabled,
  *    then the new space is replaced by 1 or 0 or nothing,
- *    depending on the default value(see below)
+ *    depending on the default_value provided
+ *    the associated behaviours are described below
  *    
  *    default value:
  *       0 - overwrite space with 0s
@@ -164,20 +168,37 @@ int bitmap_first_zero_cont_group_back    (simple_bitmap* map, bitmap_cont_group*
 
 int bitmap_count_zeros_and_ones (simple_bitmap* map);
 
-// both maps must be initialised
+/* both maps must be initialised
+ *
+ * bitmap_copy set all bits in dst_map according to the default_value provided
+ * the associated behaviours are described below
+ *
+ * default value :
+ *    0 - overwrite space with 0s
+ *    1 - overwrite space with 1s
+ *   >1 - leave the space as it is
+ */
 int bitmap_copy (simple_bitmap* src_map, simple_bitmap* dst_map, unsigned char allow_truncate, map_block default_value);
 
 // no data checks, only copying
 int bitmap_meta_copy (simple_bitmap* src_map, simple_bitmap* dst_map);
 
-// map must be initialised
-// this function does not handle memory management issues
-/* default value :
+/* map must be initialised
+ * this function does not handle memory management issues
+ *
+ * bitmap_grow initialises new map blocks(one that were introduced in growth)
+ * according to default_value provided
+ * the associated behaviours are described below
+ *
+ * default value :
  *    0 - overwrite space with 0s
  *    1 - overwrite space with 1s
  *   >1 - leave the space as it is
  */
 int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index size_in_bits, map_block default_value);
+
+/* bitmap_shrink always wipes all the abandoned bits(set to 0)
+ */
 int bitmap_shrink (simple_bitmap* map, map_block* end, bit_index size_in_bits);
 
 int bitmap_show (simple_bitmap* map);

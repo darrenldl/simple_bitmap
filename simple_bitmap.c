@@ -607,7 +607,7 @@ int bitmap_and (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
 
     if (enforce_same_size) {
         if (!(map1->length == map2->length && map1->length == ret_map->length)) {
-            printf("bitmap_and : map1 and map2 have different sizes\n");
+            printf("bitmap_and : map1, map2, ret_map have different sizes\n");
             return WRONG_INPUT;
         }
     }
@@ -715,7 +715,7 @@ int bitmap_or (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map,
 
     if (enforce_same_size) {
         if (!(map1->length == map2->length && map1->length == ret_map->length)) {
-            printf("bitmap_or : map1 and map2 have different sizes\n");
+            printf("bitmap_or : map1, map2, ret_map have different sizes\n");
             return WRONG_INPUT;
         }
     }
@@ -823,7 +823,7 @@ int bitmap_xor (simple_bitmap* map1, simple_bitmap* map2, simple_bitmap* ret_map
 
     if (enforce_same_size) {
         if (!(map1->length == map2->length && map1->length == ret_map->length)) {
-            printf("bitmap_xor : map1 and map2 have different sizes\n");
+            printf("bitmap_xor : map1, map2, ret_map have different sizes\n");
             return WRONG_INPUT;
         }
     }
