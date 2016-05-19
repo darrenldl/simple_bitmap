@@ -1113,14 +1113,14 @@ int bitmap_first_one_bit_index (simple_bitmap* map, bit_index* result, bit_index
     mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non zero map_block
-    for (; cur <= map->end; cur++) {
-        if (count == 0) {
+    if (buf == 0) {
+        cur++;
+        for (; cur <= map->end; cur++) {
             buf = *cur;
+            if (buf != 0) {
+                break;
+            }
         }
-        if (buf != 0) {
-            break;
-        }
-        count = 0;
     }
 
     // find first one bit
@@ -1197,14 +1197,14 @@ int bitmap_first_zero_bit_index (simple_bitmap* map, bit_index* result, bit_inde
     mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non all one map_block
-    for (; cur <= map->end; cur++) {
-        if (count == 0) {
+    if (buf == (map_block) -1) {
+        cur++;
+        for (; cur <= map->end; cur++) {
             buf = *cur;
+            if (buf != (map_block) -1) {
+                break;
+            }
         }
-        if (buf != (map_block) -1) {
-            break;
-        }
-        count = 0;
     }
 
     // find first zero bit
@@ -1293,14 +1293,14 @@ int bitmap_first_one_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp,
     mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non zero map block
-    for (; cur <= map->end; cur++) {
-        if (count == 0) {
+    if (buf == 0) {
+        cur++;
+        for (; cur <= map->end; cur++) {
             buf = *cur;
+            if (buf != 0) {
+                break;
+            }
         }
-        if (buf != 0) {
-            break;
-        }
-        count = 0;
     }
 
     // find first one bit
@@ -1415,14 +1415,14 @@ int bitmap_first_zero_cont_group (simple_bitmap* map, bitmap_cont_group* ret_grp
     mask = (map_block) 0x1 << (MAP_BLOCK_BIT - 1);
 
     // find first non all one map block
-    for (; cur <= map->end; cur++) {
-        if (count == 0) {
+    if (buf == (map_block) -1) {
+        cur++;
+        for (; cur <= map->end; cur++) {
             buf = *cur;
+            if (buf != (map_block) -1) {
+                break;
+            }
         }
-        if (buf != (map_block) -1) {
-            break;
-        }
-        count = 0;
     }
 
     // find first zero bit
@@ -1529,14 +1529,14 @@ int bitmap_first_one_bit_index_back (simple_bitmap* map, bit_index* result, bit_
     mask = (map_block) 0x1;
 
     // find first non zero map_block
-    for (; cur >= map->base; cur--) {
-        if (count == MAP_BLOCK_BIT) {
+    if (buf == 0) {
+        cur--;
+        for (; cur >= map->base; cur--) {
             buf = *cur;
+            if (buf != 0) {
+                break;
+            }
         }
-        if (buf != 0) {
-            break;
-        }
-        count = MAP_BLOCK_BIT;
     }
 
     // find first one bit
@@ -1616,14 +1616,14 @@ int bitmap_first_zero_bit_index_back (simple_bitmap* map, bit_index* result, bit
     mask = (map_block) 0x1;
 
     // find first non all one map_block
-    for (; cur >= map->base; cur--) {
-        if (count == MAP_BLOCK_BIT) {
+    if (buf == (map_block) -1) {
+        cur--;
+        for (; cur >= map->base; cur--) {
             buf = *cur;
+            if (buf != (map_block) -1) {
+                break;
+            }
         }
-        if (buf != (map_block) -1) {
-            break;
-        }
-        count = MAP_BLOCK_BIT;
     }
 
     // find first zero bit
@@ -1717,14 +1717,14 @@ int bitmap_first_one_cont_group_back (simple_bitmap* map, bitmap_cont_group* ret
     mask = (map_block) 0x1;
 
     // find first non zero map block
-    for (; cur >= map->base; cur--) {
-        if (count == MAP_BLOCK_BIT) {
+    if (buf == 0) {
+        cur--;
+        for (; cur >= map->base; cur--) {
             buf = *cur;
+            if (buf != 0) {
+                break;
+            }
         }
-        if (buf != 0) {
-            break;
-        }
-        count = MAP_BLOCK_BIT;
     }
 
     // find first one bit
@@ -1844,14 +1844,14 @@ int bitmap_first_zero_cont_group_back (simple_bitmap* map, bitmap_cont_group* re
     mask = (map_block) 0x1;
 
     // find first non all one map block
-    for (; cur >= map->base; cur--) {
-        if (count == MAP_BLOCK_BIT) {
+    if (buf == (map_block) -1) {
+        cur--;
+        for (; cur >= map->base; cur--) {
             buf = *cur;
+            if (buf != (map_block) -1) {
+                break;
+            }
         }
-        if (buf != (map_block) -1) {
-            break;
-        }
-        count = MAP_BLOCK_BIT;
     }
 
     // find first zero bit

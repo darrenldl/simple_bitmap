@@ -5,6 +5,8 @@
  * 
  * Note:
  *    simple bitmap is NOT thread safe
+ *
+ *    simple bitmap assumes the CPU is two's complement
  * 
  * License:
  * This is free and unencumbered software released into the public domain.
