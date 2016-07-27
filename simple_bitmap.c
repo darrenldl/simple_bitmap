@@ -2152,7 +2152,7 @@ int bitmap_grow (simple_bitmap* map, map_block* base, map_block* end, bit_index 
 
 // cuts the bitmap and modifies the meta data
 int bitmap_shrink (simple_bitmap* map, map_block* end, bit_index size_in_bits) {
-    map_block* cur;
+    volatile map_block* cur;
 
     map_block mask;
 
