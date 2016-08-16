@@ -56,7 +56,7 @@
 
 #include "simple_something_error.h"
 
-#define get_bitmap_map_block_number(size_in_bits)   ((size_in_bits) / MAP_BLOCK_BIT + (((size_in_bits) % MAP_BLOCK_BIT) == 0 ? 0 : 1))
+#define get_bitmap_map_block_number(size_in_bits)   (((size_in_bits) + (MAP_BLOCK_BIT) - 1) / (MAP_BLOCK_BIT))
 #define get_bitmap_map_block_index(bit_index)       ((bit_index) / (MAP_BLOCK_BIT))
 #define get_bitmap_map_block_bit_index(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
 #define get_bitmap_excess_bits(bit_index)   ((bit_index) % (MAP_BLOCK_BIT))
